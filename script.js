@@ -356,7 +356,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         return `
-            <table>
+            <table class="financial-table">
                 <thead><tr>${headerHTML}</tr></thead>
                 <tbody>${rowHTML}</tbody>
             </table>

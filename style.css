@@ -248,6 +248,8 @@ body {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    width: 100%;
+    overflow-x: auto;
 }
 
 .table-section {
@@ -265,31 +267,54 @@ body {
     overflow-y: auto;
 }
 
-table {
+table.financial-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.9rem;
-    min-width: 600px;
+    margin-bottom: 2rem;
+    background: #fff;
+    font-size: 1rem;
+    box-shadow: 0 2px 8px rgba(28, 37, 65, 0.03);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    min-width: 650px;
 }
 
-th {
-    text-align: left;
-    padding: 0.75rem;
-    background-color: var(--pastel-gold);
-    color: var(--navy);
+.financial-table th {
+    text-align: center;
     font-weight: 600;
-    position: sticky;
-    top: 0;
-    border-bottom: 2px solid var(--gray-color);
+    background: var(--gold);
+    color: #fff;
+    border-bottom: 2px solid var(--navy);
+    font-size: 1.08rem;
+    letter-spacing: 0.01em;
+    box-shadow: 0 2px 4px rgba(28, 37, 65, 0.04);
 }
 
-td {
-    padding: 0.75rem;
-    border-bottom: 1px solid #eee;
+.financial-table td, .financial-table th {
+    padding: 0.75rem 1.2rem;
+    text-align: right;
+    border-bottom: 1px solid #e6e6e6;
 }
 
-tr:hover td {
-    background-color: rgba(255, 215, 0, 0.05);
+.financial-table td:first-child, .financial-table th:first-child {
+    text-align: left;
+}
+
+.financial-table tbody tr:nth-child(even) {
+    background: #fcf8f3;
+}
+
+.financial-table tbody tr:nth-child(odd) {
+    background: #fff;
+}
+
+.financial-table tbody tr:hover {
+    background: #f3e1bb44; /* light gold highlight on hover */
+}
+
+.financial-table td {
+    font-weight: 400;
+    transition: background 0.2s;
 }
 
 .app-footer {
