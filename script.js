@@ -375,7 +375,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                     
-                    return `<td class="${classes.join(' ')}">${value}</td>`;
+                    return `<td><span class="${classes.join(' ')}">${value}</span></td>`;
                 }
                 
                 // Regular cell

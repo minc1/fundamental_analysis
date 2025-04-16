@@ -365,33 +365,22 @@ table.financial-table {
 }
 
 /* Conditional formatting for financial tables */
-.financial-table td.positive-value {
+.financial-table td .positive-value {
     color: #4E6851; /* Green color for positive values */
 }
 
-.financial-table td.negative-value {
+.financial-table td .negative-value {
     color: #B83A2D; /* Red color for negative values */
 }
 
-.financial-table td.highlight-positive {
-    background-color: rgba(78, 104, 81, 0.1); /* Light green background */
+.financial-table td .highlight-positive {
     color: #4E6851;
     font-weight: 500;
 }
 
-.financial-table td.highlight-negative {
-    background-color: rgba(184, 58, 45, 0.1); /* Light red background */
+.financial-table td .highlight-negative {
     color: #B83A2D;
     font-weight: 500;
-}
-
-/* Override hover effect for highlighted cells */
-.financial-table tbody tr:hover td.highlight-positive {
-    background-color: rgba(78, 104, 81, 0.2);
-}
-
-.financial-table tbody tr:hover td.highlight-negative {
-    background-color: rgba(184, 58, 45, 0.2);
 }
 
 @media print {
