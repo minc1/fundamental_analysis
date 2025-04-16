@@ -1,4 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Set current year in footer
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+    // DOM elements
     const tickerInput = document.getElementById('ticker');
     const loadButton = document.getElementById('loadData');
     const loadingIndicator = document.getElementById('loadingIndicator');
@@ -6,100 +10,195 @@ document.addEventListener('DOMContentLoaded', function() {
     const errorMessage = document.getElementById('errorMessage');
     const dataContainer = document.getElementById('dataContainer');
     const companyHeader = document.getElementById('companyHeader');
-    const tableContainer = document.getElementById('tableContainer');
+    const marketCapEl = document.getElementById('marketCap');
+    const peRatioEl = document.getElementById('peRatio');
+    const debtEquityEl = document.getElementById('debtEquity');
+    const freeCashFlowEl = document.getElementById('freeCashFlow');
+    const chartLegend = document.getElementById('chartLegend');
+    const incomeTable = document.getElementById('incomeTable');
+    const balanceSheetTable = document.getElementById('balanceSheetTable');
+    const cashFlowTable = document.getElementById('cashFlowTable');
     
     let financialChart = null;
+    const chartColors = [
+        '#1c2541', // Navy - Revenue (var(--navy))
+        '#c5a47e', // Gold - Net Income (var(--gold))
+        '#f3e1bb', // Pastel Gold - Operating Cash Flow (var(--pastel-gold))
+        '#6c757d', // Gray - Total Debt (var(--gray-color))
+        '#212529'  // Dark - Free Cash Flow (var(--dark-color))
+    ];
     
+    // Event listeners
     loadButton.addEventListener('click', loadFinancialData);
     tickerInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            loadFinancialData();
-        }
+        if (e.key === 'Enter') loadFinancialData();
     });
-    
+
+    // Create chart legend
+    function createChartLegend() {
+        const labels = [
+            'Revenue', 
+            'Net Income', 
+            'Operating Cash Flow', 
+            'Total Debt', 
+            'Free Cash Flow'
+        ];
+        
+        chartLegend.innerHTML = labels.map((label, i) => `
+            <div class="chart-legend-item">
+                <span class="chart-legend-color" style="background-color: ${chartColors[i]}"></span>
+                ${label}
+            </div>
+        `).join('');
+    }
+
+    // Main function to load financial data
     async function loadFinancialData() {
         const ticker = tickerInput.value.trim().toUpperCase();
         
         if (!ticker) {
-            showError('Please enter a ticker symbol');
+            showError('Please enter a valid ticker symbol');
             return;
         }
         
-        // Show loading indicator
+        // Show loading state
         loadingTicker.textContent = ticker;
-        loadingIndicator.style.display = 'block';
+        loadingIndicator.style.display = 'flex';
         errorMessage.style.display = 'none';
         dataContainer.style.display = 'none';
         
         try {
-            // Fetch data from your server
             const [incomeData, cashFlowData, balanceSheetData] = await Promise.all([
                 fetchData(`${ticker}/income_statement_annual.json`),
                 fetchData(`${ticker}/cash_flow_statement_annual.json`),
                 fetchData(`${ticker}/balance_sheet_statement_annual.json`)
             ]);
             
-            // Process and display the data
-            displayFinancialData(ticker, incomeData, cashFlowData, balanceSheetData);
-            
-            // Hide loading indicator
-            loadingIndicator.style.display = 'none';
+            processFinancialData(ticker, incomeData, cashFlowData, balanceSheetData);
             
         } catch (error) {
-            loadingIndicator.style.display = 'none';
-            showError(error.message);
+            showError(`Error loading data for ${ticker}: ${error.message}`);
             console.error('Error loading financial data:', error);
+        } finally {
+            loadingIndicator.style.display = 'none';
         }
     }
-    
+
+    // Fetch data from DATA folder
     async function fetchData(path) {
         const response = await fetch(`DATA/${path}`);
         if (!response.ok) {
-            throw new Error(`Failed to fetch data for ${path.split('/')[0]}`);
+            throw new Error(`Data not found for ${path.split('/')[0]}`);
         }
         return response.json();
     }
-    
-    function showError(message) {
-        errorMessage.textContent = message;
-        errorMessage.style.display = 'block';
-    }
-    
-    function displayFinancialData(ticker, incomeData, cashFlowData, balanceSheetData) {
-        // Chronological order: oldest first
+
+    // Process and display the financial data
+    function processFinancialData(ticker, incomeData, cashFlowData, balanceSheetData) {
+        // Sort data by calendar year (oldest first for chart)
         incomeData.sort((a, b) => a.calendarYear - b.calendarYear);
         cashFlowData.sort((a, b) => a.calendarYear - b.calendarYear);
         balanceSheetData.sort((a, b) => a.calendarYear - b.calendarYear);
-        // Sort data by calendar year (newest first)
-        incomeData.sort((a, b) => b.calendarYear - a.calendarYear);
-        cashFlowData.sort((a, b) => b.calendarYear - a.calendarYear);
-        balanceSheetData.sort((a, b) => b.calendarYear - a.calendarYear);
         
-        // Update header
-        companyHeader.textContent = `${ticker} - Annual Financial Data`;
+        // Update company header
+        companyHeader.textContent = `${ticker} Financial Analysis`;
         
-        // Prepare data for chart
+        // Calculate and display key metrics
+        const latestIncome = incomeData[incomeData.length - 1];
+        const latestCashFlow = cashFlowData[cashFlowData.length - 1];
+        const latestBalanceSheet = balanceSheetData[balanceSheetData.length - 1];
+        
+        // Market Cap (simulated using revenue multiple)
+        const marketCap = latestIncome.revenue * 6; 
+        marketCapEl.textContent = formatCurrency(marketCap);
+        
+        // P/E Ratio
+        const peRatio = (marketCap / latestIncome.netIncome).toFixed(2);
+        peRatioEl.textContent = peRatio;
+        
+        // Debt/Equity Ratio
+        if (latestBalanceSheet.totalEquity > 0) {
+            const debtEquity = (latestBalanceSheet.totalDebt / latestBalanceSheet.totalEquity).toFixed(2);
+            debtEquityEl.textContent = debtEquity;
+        }
+        
+        // Free Cash Flow
+        freeCashFlowEl.textContent = formatCurrency(latestCashFlow.freeCashFlow);
+        
+        // Create financial chart
+        createFinancialChart(incomeData, cashFlowData, balanceSheetData);
+        
+        // Create tables
+        createFinancialTables(incomeData, cashFlowData, balanceSheetData);
+        
+        // Create chart legend
+        createChartLegend();
+        
+        // Show the data container
+        dataContainer.style.display = 'block';
+    }
+
+    // Create the financial chart
+    function createFinancialChart(incomeData, cashFlowData, balanceSheetData) {
         const years = incomeData.map(item => item.calendarYear);
-        const revenue = incomeData.map(item => item.revenue);
-        const netIncome = incomeData.map(item => item.netIncome);
-        const operatingCashFlow = cashFlowData.map(item => item.operatingCashFlow);
-        const totalDebt = balanceSheetData.map(item => item.totalDebt);
-        const freeCashFlow = cashFlowData.map(item => item.freeCashFlow);
-        // New metrics
-        const roe = incomeData.map(item => {
-            // ROE = Net Income / Total Equity
-            const bs = balanceSheetData.find(b => b.calendarYear === item.calendarYear);
-            return (bs && bs.totalEquity) ? (item.netIncome / bs.totalEquity) * 100 : null;
-        });
-        const debtToEquity = balanceSheetData.map(item => {
-            if (item.totalEquity && item.totalEquity !== 0) {
-                return item.totalDebt / item.totalEquity;
+        const datasets = [
+            {
+                label: 'Revenue',
+                data: incomeData.map(item => item.revenue),
+                borderColor: chartColors[0],
+                backgroundColor: 'rgba(28, 37, 65, 0.1)',
+                pointBackgroundColor: chartColors[0],
+                pointBorderColor: chartColors[0],
+                borderWidth: 2,
+                tension: 0.1,
+                yAxisID: 'y'
+            },
+            {
+                label: 'Net Income',
+                data: incomeData.map(item => item.netIncome),
+                borderColor: chartColors[1],
+                backgroundColor: 'rgba(197, 164, 126, 0.1)',
+                pointBackgroundColor: chartColors[1],
+                pointBorderColor: chartColors[1],
+                borderWidth: 2,
+                tension: 0.1,
+                yAxisID: 'y'
+            },
+            {
+                label: 'Operating Cash Flow',
+                data: cashFlowData.map(item => item.operatingCashFlow),
+                borderColor: chartColors[2],
+                backgroundColor: 'rgba(243, 225, 187, 0.1)',
+                pointBackgroundColor: chartColors[2],
+                pointBorderColor: chartColors[2],
+                borderWidth: 2,
+                tension: 0.1,
+                yAxisID: 'y'
+            },
+            {
+                label: 'Total Debt',
+                data: balanceSheetData.map(item => item.totalDebt),
+                borderColor: chartColors[3],
+                backgroundColor: 'rgba(108, 117, 125, 0.1)',
+                pointBackgroundColor: chartColors[3],
+                pointBorderColor: chartColors[3],
+                borderWidth: 2,
+                tension: 0.1,
+                yAxisID: 'y'
+            },
+            {
+                label: 'Free Cash Flow',
+                data: cashFlowData.map(item => item.freeCashFlow),
+                borderColor: chartColors[4],
+                backgroundColor: 'rgba(33, 37, 41, 0.1)',
+                pointBackgroundColor: chartColors[4],
+                pointBorderColor: chartColors[4],
+                borderWidth: 2,
+                tension: 0.1,
+                yAxisID: 'y'
             }
-            return null;
-        });
-        const eps = incomeData.map(item => item.eps);
-        
-        // Create or update chart
+        ];
+
         const ctx = document.getElementById('financialChart').getContext('2d');
         
         if (financialChart) {
@@ -110,108 +209,28 @@ document.addEventListener('DOMContentLoaded', function() {
             type: 'line',
             data: {
                 labels: years,
-                datasets: [
-                    {
-                        label: 'Revenue (USD)',
-                        data: revenue,
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.1
-                    },
-                    {
-                        label: 'Net Income (USD)',
-                        data: netIncome,
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.1
-                    },
-                    {
-                        label: 'Operating Cash Flow (USD)',
-                        data: operatingCashFlow,
-                        borderColor: 'rgba(153, 102, 255, 1)',
-                        backgroundColor: 'rgba(153, 102, 255, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.1
-                    },
-                    {
-                        label: 'Total Debt (USD)',
-                        data: totalDebt,
-                        borderColor: 'rgba(255, 159, 64, 1)',
-                        backgroundColor: 'rgba(255, 159, 64, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.1
-                    },
-                    {
-                        label: 'Free Cash Flow (USD)',
-                        data: freeCashFlow,
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.1
-                    },
-                    {
-                        label: 'ROE (%)',
-                        data: roe,
-                        borderColor: 'rgba(46, 204, 113, 1)',
-                        backgroundColor: 'rgba(46, 204, 113, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.1,
-                        yAxisID: 'y2',
-                    },
-                    {
-                        label: 'Debt/Equity',
-                        data: debtToEquity,
-                        borderColor: 'rgba(241, 196, 15, 1)',
-                        backgroundColor: 'rgba(241, 196, 15, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.1,
-                        yAxisID: 'y3',
-                    },
-                    {
-                        label: 'EPS',
-                        data: eps,
-                        borderColor: 'rgba(52, 73, 94, 1)',
-                        backgroundColor: 'rgba(52, 73, 94, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.1,
-                        yAxisID: 'y4',
-                    }
-                ]
+                datasets: datasets
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
                 scales: {
                     y: {
-                        beginAtZero: false,
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
                         ticks: {
                             callback: function(value) {
-                                return Number.isInteger(value) ? value : Math.round(value);
+                                return formatCurrency(value);
                             }
                         },
-                        title: { display: true, text: 'USD (Whole Numbers)' }
-                    },
-                    y2: {
-                        position: 'right',
-                        grid: { drawOnChartArea: false },
-                        ticks: { callback: v => v + '%', stepSize: 10 },
-                        title: { display: true, text: 'ROE (%)' },
-                        display: false
-                    },
-                    y3: {
-                        position: 'right',
-                        grid: { drawOnChartArea: false },
-                        ticks: { stepSize: 0.5 },
-                        title: { display: true, text: 'Debt/Equity' },
-                        display: false
-                    },
-                    y4: {
-                        position: 'right',
-                        grid: { drawOnChartArea: false },
-                        title: { display: true, text: 'EPS' },
-                        display: false
+                        grid: {
+                            drawOnChartArea: true
+                        }
                     }
                 },
                 plugins: {
@@ -222,125 +241,109 @@ document.addEventListener('DOMContentLoaded', function() {
                                 if (label) {
                                     label += ': ';
                                 }
-                                if (context.dataset.label === 'ROE (%)') {
-                                    label += (context.raw !== null ? context.raw.toFixed(2) + '%' : 'N/A');
-                                } else if (context.dataset.label === 'Debt/Equity') {
-                                    label += (context.raw !== null ? context.raw.toFixed(2) : 'N/A');
-                                } else if (context.dataset.label === 'EPS') {
-                                    label += (context.raw !== null ? context.raw.toFixed(2) : 'N/A');
-                                } else {
-                                    label += formatCurrency(context.raw);
-                                }
+                                label += formatCurrency(context.raw);
                                 return label;
                             }
                         }
+                    },
+                    legend: {
+                        display: false
                     }
                 }
             }
         });
-        
-        // Create table with all data
-        let tableHTML = `
-            <table class="financial-table">
-                <thead>
-                    <tr>
-                        <th>Year</th>
-                        <th>Revenue</th>
-                        <th>Net Income</th>
-                        <th>Gross Profit</th>
-                        <th>Operating Cash Flow</th>
-                        <th>Free Cash Flow</th>
-                        <th>Total Debt</th>
-                        <th>EPS</th>
-                        <th>ROE (%)</th>
-                        <th>Debt/Equity</th>
-                        <th>Net Margin (%)</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-        
-        for (let i = 0; i < incomeData.length; i++) {
-            const yearData = incomeData[i];
-            const cashFlowYearData = cashFlowData.find(item => item.calendarYear === yearData.calendarYear);
-            const balanceSheetYearData = balanceSheetData.find(item => item.calendarYear === yearData.calendarYear);
-            const roe = (balanceSheetYearData && balanceSheetYearData.totalEquity) ? (yearData.netIncome / balanceSheetYearData.totalEquity) * 100 : null;
-            const debtToEquity = (balanceSheetYearData && balanceSheetYearData.totalEquity && balanceSheetYearData.totalEquity !== 0) ? (balanceSheetYearData.totalDebt / balanceSheetYearData.totalEquity) : null;
-            const netMargin = (yearData.revenue && yearData.netIncome) ? (yearData.netIncome / yearData.revenue) * 100 : null;
-            
-            tableHTML += `
-                <tr class="table-row-${i % 2}">
-                    <td>${yearData.calendarYear}</td>
-                    <td>${formatCurrency(yearData.revenue)}</td>
-                    <td class="${yearData.netIncome >= 0 ? 'positive' : 'negative'}">${formatCurrency(yearData.netIncome)}</td>
-                    <td>${formatCurrency(yearData.grossProfit)}</td>
-                    <td>${cashFlowYearData ? formatCurrency(cashFlowYearData.operatingCashFlow) : 'N/A'}</td>
-                    <td>${cashFlowYearData ? formatCurrency(cashFlowYearData.freeCashFlow) : 'N/A'}</td>
-                    <td>${balanceSheetYearData ? formatCurrency(balanceSheetYearData.totalDebt) : 'N/A'}</td>
-                    <td class="${yearData.eps >= 0 ? 'positive' : 'negative'}">${formatNumber(yearData.eps)}</td>
-                    <td>${roe !== null ? roe.toFixed(2) + '%' : 'N/A'}</td>
-                    <td>${debtToEquity !== null ? debtToEquity.toFixed(2) : 'N/A'}</td>
-                    <td>${netMargin !== null ? netMargin.toFixed(2) + '%' : 'N/A'}</td>
-                </tr>
-            `;
-        }
-        
-        tableHTML += `
-                </tbody>
-            </table>
-        `;
-        
-        tableContainer.innerHTML = tableHTML;
-        
-        // Show the data container
-        dataContainer.style.display = 'block';
-        
-        for (let i = 0; i < incomeData.length; i++) {
-            const yearData = incomeData[i];
-            const cashFlowYearData = cashFlowData.find(item => item.calendarYear === yearData.calendarYear);
-            const balanceSheetYearData = balanceSheetData.find(item => item.calendarYear === yearData.calendarYear);
-            
-            tableHTML += `
-                <tr>
-                    <td>${yearData.calendarYear}</td>
-                    <td>${formatCurrency(yearData.revenue)}</td>
-                    <td class="${yearData.netIncome >= 0 ? 'positive' : 'negative'}">${formatCurrency(yearData.netIncome)}</td>
-                    <td>${formatCurrency(yearData.grossProfit)}</td>
-                    <td>${cashFlowYearData ? formatCurrency(cashFlowYearData.operatingCashFlow) : 'N/A'}</td>
-                    <td>${cashFlowYearData ? formatCurrency(cashFlowYearData.freeCashFlow) : 'N/A'}</td>
-                    <td>${balanceSheetYearData ? formatCurrency(balanceSheetYearData.totalDebt) : 'N/A'}</td>
-                    <td class="${yearData.eps >= 0 ? 'positive' : 'negative'}">${formatNumber(yearData.eps)}</td>
-                </tr>
-            `;
-        }
-        
-        tableHTML += `
-                </tbody>
-            </table>
-        `;
-        
-        tableContainer.innerHTML = tableHTML;
-        
-        // Show the data container
-        dataContainer.style.display = 'block';
     }
-    
+
+    // Create financial tables
+    function createFinancialTables(incomeData, cashFlowData, balanceSheetData) {
+        // Income Statement Table
+        incomeTable.innerHTML = createTableHTML(
+            ['Year', 'Revenue', 'Gross Profit', 'Net Income', 'EPS', 'Operating Income'],
+            incomeData.map(item => [
+                item.calendarYear,
+                formatCurrency(item.revenue),
+                formatCurrency(item.grossProfit),
+                formatCurrency(item.netIncome),
+                item.eps,
+                formatCurrency(item.operatingIncome)
+            ])
+        );
+        
+        // Balance Sheet Table
+        balanceSheetTable.innerHTML = createTableHTML(
+            ['Year', 'Total Assets', 'Total Debt', 'Total Equity', 'Cash', 'Current Assets'],
+            balanceSheetData.map(item => [
+                item.calendarYear,
+                formatCurrency(item.totalAssets),
+                formatCurrency(item.totalDebt),
+                formatCurrency(item.totalEquity),
+                formatCurrency(item.cashAndCashEquivalents),
+                formatCurrency(item.totalCurrentAssets)
+            ])
+        );
+        
+        // Cash Flow Table
+        cashFlowTable.innerHTML = createTableHTML(
+            ['Year', 'Operating CF', 'Investing CF', 'Financing CF', 'Free CF', 'Net Change'],
+            cashFlowData.map(item => [
+                item.calendarYear,
+                formatCurrency(item.operatingCashFlow),
+                formatCurrency(item.netCashUsedForInvestingActivites),
+                formatCurrency(item.netCashUsedProvidedByFinancingActivities),
+                formatCurrency(item.freeCashFlow),
+                formatCurrency(item.netChangeInCash)
+            ])
+        );
+    }
+
+    // Helper function to create table HTML
+    function createTableHTML(headers, rows) {
+        const headerHTML = headers.map(h => `<th>${h}</th>`).join('');
+        
+        const rowHTML = rows.map(row => {
+            const cells = row.map(cell => `<td>${cell}</td>`).join('');
+            return `<tr>${cells}</tr>`;
+        }).join('');
+        
+        return `
+            <table>
+                <thead><tr>${headerHTML}</tr></thead>
+                <tbody>${rowHTML}</tbody>
+            </table>
+        `;
+    }
+
+    // Helper function to format currency values
     function formatCurrency(value) {
         if (value === undefined || value === null) return 'N/A';
+        if (typeof value === 'string') return value;
         
         const absValue = Math.abs(value);
+        let suffix = '';
+        let divisor = 1;
+        
         if (absValue >= 1000000000) {
-            return `$${(value / 1000000000).toFixed(2)}B`;
+            suffix = 'B';
+            divisor = 1000000000;
         } else if (absValue >= 1000000) {
-            return `$${(value / 1000000).toFixed(2)}M`;
+            suffix = 'M';
+            divisor = 1000000;
         } else if (absValue >= 1000) {
-            return `$${(value / 1000).toFixed(2)}K`;
+            suffix = 'K';
+            divisor = 1000;
         }
-        return `$${value.toFixed(2)}`;
+        
+        const formattedValue = (value / divisor).toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        
+        return `$${formattedValue}${suffix}`;
     }
-    
-    function formatNumber(value) {
-        if (value === undefined || value === null) return 'N/A';
-        return value.toFixed(2);
+
+    // Show error message
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = 'block';
     }
 });
