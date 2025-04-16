@@ -236,17 +236,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 scales: {
                     y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        ticks: {
-                            callback: function(value) {
-                                return formatCurrency(value, true);
-                            },
-                            precision: 0 // This ensures no decimal points on y-axis
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Values'
                         },
-                        grid: {
-                            display: false
+                        ticks: {
+                            stepSize: 1,
+                            callback: function(value) {
+                                return Math.floor(value);
+                            }
                         }
                     },
                     x: {
