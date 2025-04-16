@@ -15,7 +15,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const netIncomeEl = document.getElementById('netIncome');
     const debtEquityEl = document.getElementById('debtEquity');
     const freeCashFlowEl = document.getElementById('freeCashFlow');
-    // Chart and table elements remain the same
+    const epsEl = document.getElementById('eps'); // Added for EPS
+    const metricYearEls = document.querySelectorAll('.metric-year'); // Added for dynamic year
+    // Chart and table elements
     const chartLegend = document.getElementById('chartLegend');
     const incomeTable = document.getElementById('incomeTable');
     const balanceSheetTable = document.getElementById('balanceSheetTable');
@@ -106,37 +108,50 @@ document.addEventListener('DOMContentLoaded', function() {
         companyHeader.textContent = `${ticker} Financial Analysis`;
 
         // Get latest year's data
-        const latestIncome = incomeData[incomeData.length - 1];
-        const latestCashFlow = cashFlowData[cashFlowData.length - 1];
-        const latestBalanceSheet = balanceSheetData[balanceSheetData.length - 1];
+        const latestIncome = incomeData.length > 0 ? incomeData[incomeData.length - 1] : null;
+        const latestCashFlow = cashFlowData.length > 0 ? cashFlowData[cashFlowData.length - 1] : null;
+        const latestBalanceSheet = balanceSheetData.length > 0 ? balanceSheetData[balanceSheetData.length - 1] : null;
+
+        // --- Get Latest Year and Update Labels ---
+        const latestYear = latestIncome ? latestIncome.calendarYear : 'N/A'; // Get the year
+        metricYearEls.forEach(span => { // Update all year spans
+            span.textContent = latestYear;
+        });
+        // --- End Year Update ---
+
 
         // --- Display Key Metrics (using direct data) ---
 
-        // Revenue (Latest Year)
-        revenueEl.textContent = formatCurrency(latestIncome.revenue);
+        // Revenue
+        revenueEl.textContent = latestIncome ? formatCurrency(latestIncome.revenue) : 'N/A';
 
-        // Net Income (Latest Year)
-        netIncomeEl.textContent = formatCurrency(latestIncome.netIncome);
+        // Net Income
+        netIncomeEl.textContent = latestIncome ? formatCurrency(latestIncome.netIncome) : 'N/A';
 
-        // Debt/Equity Ratio (Latest Year)
-        // Check if totalEquity is positive to avoid division by zero or meaningless ratios
-        if (latestBalanceSheet.totalEquity && latestBalanceSheet.totalEquity > 0) {
+        // Debt/Equity Ratio
+        if (latestBalanceSheet && latestBalanceSheet.totalEquity && latestBalanceSheet.totalEquity > 0) {
             const debtEquityRatio = (latestBalanceSheet.totalDebt / latestBalanceSheet.totalEquity);
             debtEquityEl.textContent = debtEquityRatio.toFixed(2);
         } else {
-            // Handle cases where equity is zero, negative, or undefined
             debtEquityEl.textContent = 'N/A';
         }
 
-        // Free Cash Flow (Latest Year)
-        freeCashFlowEl.textContent = formatCurrency(latestCashFlow.freeCashFlow);
+        // Free Cash Flow
+        freeCashFlowEl.textContent = latestCashFlow ? formatCurrency(latestCashFlow.freeCashFlow) : 'N/A';
 
+        // EPS (Earnings Per Share) - Added
+        if (latestIncome && latestIncome.eps !== undefined && latestIncome.eps !== null) {
+            // EPS is typically formatted to 2 decimal places, not like large currency
+            epsEl.textContent = latestIncome.eps.toFixed(2);
+        } else {
+            epsEl.textContent = 'N/A';
+        }
         // --- End Key Metrics ---
 
         // Create financial chart
         createFinancialChart(incomeData, cashFlowData, balanceSheetData);
 
-        // Create tables
+        // Create tables (ensure data is passed correctly)
         createFinancialTables(incomeData, cashFlowData, balanceSheetData);
 
         // Create chart legend
@@ -249,6 +264,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 if (label) {
                                     label += ': ';
                                 }
+                                // Use formatCurrency for consistency, but it handles non-large numbers too
                                 label += formatCurrency(context.raw);
                                 return label;
                             }
@@ -267,40 +283,41 @@ document.addEventListener('DOMContentLoaded', function() {
         // Income Statement Table
         incomeTable.innerHTML = createTableHTML(
             ['Year', 'Revenue', 'Gross Profit', 'Net Income', 'EPS', 'Operating Income'],
-            incomeData.map(item => [ // Removed .reverse()
+            incomeData.map(item => [
                 item.calendarYear,
                 formatCurrency(item.revenue),
                 formatCurrency(item.grossProfit),
                 formatCurrency(item.netIncome),
-                item.eps !== undefined ? item.eps : 'N/A',
+                // Format EPS directly here or rely on formatCurrency if it handles simple numbers well
+                (item.eps !== undefined && item.eps !== null) ? item.eps.toFixed(2) : 'N/A',
                 formatCurrency(item.operatingIncome)
-            ])
+            ]).reverse() // Display latest year first in tables
         );
 
         // Balance Sheet Table
         balanceSheetTable.innerHTML = createTableHTML(
             ['Year', 'Total Assets', 'Total Debt', 'Total Equity', 'Cash', 'Current Assets'],
-            balanceSheetData.map(item => [ // Removed .reverse()
+            balanceSheetData.map(item => [
                 item.calendarYear,
                 formatCurrency(item.totalAssets),
                 formatCurrency(item.totalDebt),
                 formatCurrency(item.totalEquity),
                 formatCurrency(item.cashAndCashEquivalents),
                 formatCurrency(item.totalCurrentAssets)
-            ])
+            ]).reverse() // Display latest year first in tables
         );
 
         // Cash Flow Table
         cashFlowTable.innerHTML = createTableHTML(
             ['Year', 'Operating CF', 'Investing CF', 'Financing CF', 'Free CF', 'Net Change'],
-            cashFlowData.map(item => [ // Removed .reverse()
+            cashFlowData.map(item => [
                 item.calendarYear,
                 formatCurrency(item.operatingCashFlow),
-                formatCurrency(item.netCashUsedForInvestingActivites),
+                formatCurrency(item.netCashUsedForInvestingActivites), // Note: Typo in original data key? Should be 'Activities'
                 formatCurrency(item.netCashUsedProvidedByFinancingActivities),
                 formatCurrency(item.freeCashFlow),
                 formatCurrency(item.netChangeInCash)
-            ])
+            ]).reverse() // Display latest year first in tables
         );
     }
 
@@ -332,45 +349,48 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 
-    // Helper function to format currency values
+    // Helper function to format currency values or simple numbers
     function formatCurrency(value) {
         if (value === undefined || value === null) return 'N/A';
-        // Check if it's already formatted (like EPS which might be a simple number)
-        if (typeof value !== 'number') return value;
+        if (typeof value !== 'number') return value; // Return as is if not a number
 
         const absValue = Math.abs(value);
-        let suffix = '';
-        let divisor = 1;
 
-        if (absValue >= 1000000000) {
-            suffix = 'B';
-            divisor = 1000000000;
-        } else if (absValue >= 1000000) {
-            suffix = 'M';
-            divisor = 1000000;
-        } else if (absValue >= 1000) {
-            // Optional: Add K for thousands if desired
-            // suffix = 'K';
-            // divisor = 1000;
-        }
+        // Check if it's a potentially large currency value or a smaller number (like EPS)
+        if (absValue >= 10000) { // Threshold for using M/B suffixes
+            let suffix = '';
+            let divisor = 1;
 
-        // Use Intl.NumberFormat for better localization and formatting
-        const formatter = new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD', // Assuming USD, adjust if needed
-            minimumFractionDigits: divisor === 1 ? 0 : 2, // No decimals for raw numbers, 2 for B/M/K
-            maximumFractionDigits: divisor === 1 ? 0 : 2
-        });
+            if (absValue >= 1000000000) {
+                suffix = 'B';
+                divisor = 1000000000;
+            } else if (absValue >= 1000000) {
+                suffix = 'M';
+                divisor = 1000000;
+            }
+            // Removed 'K' suffix for simplicity, can be added back if needed
 
-        // Format the divided value, then manually append the suffix if needed
-        let formattedValue = formatter.format(value / divisor);
+            // Use Intl.NumberFormat for formatting the number part
+            const formatter = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD', // Assuming USD
+                minimumFractionDigits: 2, // Always show 2 decimals for M/B
+                maximumFractionDigits: 2
+            });
 
-        // Remove the currency symbol added by Intl.NumberFormat if we add a suffix
-        if (suffix) {
-             formattedValue = formattedValue.replace('$', ''); // Adjust if currency symbol is different
-             return `$${formattedValue}${suffix}`;
+            // Format the divided value, remove currency symbol, add suffix
+            let formattedValue = formatter.format(value / divisor).replace('$', '');
+            return `$${formattedValue}${suffix}`;
+
         } else {
-            return formattedValue; // Return the fully formatted value with currency symbol
+            // For smaller numbers (like EPS or ratios if passed here), format with 2 decimal places
+            // Use Intl.NumberFormat for consistency, but without currency style if it's not money
+             const formatter = new Intl.NumberFormat('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+             return formatter.format(value);
+            // Alternatively, for simple cases: return value.toFixed(2);
         }
     }
 
