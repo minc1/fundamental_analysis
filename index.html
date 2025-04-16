@@ -3,36 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Statement Analyzer</title>
+    <title>ForensicFinancials | Financial Analysis</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js" defer></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Financial Statement Analyzer</h1>
-        
-        <div class="input-group">
-            <label for="ticker">Enter Ticker Symbol:</label>
-            <input type="text" id="ticker" placeholder="e.g. AAPL">
-            <button id="loadData">Load Data</button>
-            <div class="error" id="errorMessage"></div>
-        </div>
-        
-        <div class="loading" id="loadingIndicator">
-            Loading data for <span id="loadingTicker"></span>...
-        </div>
-    </div>
-    
-    <div class="container" id="dataContainer" style="display: none;">
-        <h2 id="companyHeader"></h2>
-        
-        <div class="chart-container">
-            <canvas id="financialChart"></canvas>
-        </div>
-        
-        <h3>Financial Metrics</h3>
-        <div id="tableContainer"></div>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>Forensic<span>Financials</span></h1>
+            <p class="subtitle">In-depth Financial Statement Analysis</p>
+        </header>
+
+        <main class="main-content">
+            <section class="input-section card">
+                <div class="input-group">
+                    <div class="input-container">
+                        <label for="ticker">Enter Company Ticker</label>
+                        <div class="input-with-button">
+                            <input type="text" id="ticker" placeholder="e.g. NVDA, AAPL" autofocus>
+                            <button id="loadData" class="primary-button">
+                                <span class="button-text">Analyze</span>
+                                <span class="button-icon">→</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="error" id="errorMessage"></div>
+                </div>
+            </section>
+
+            <div class="loading" id="loadingIndicator">
+                <div class="spinner"></div>
+                <p>Loading financial data for <span id="loadingTicker"></span>...</p>
+            </div>
+
+            <section class="results-section" id="dataContainer" style="display: none;">
+                <div class="company-header card">
+                    <h2 id="companyHeader"></h2>
+                    <div class="company-metrics">
+                        <div class="metric-card">
+                            <span class="metric-label">Market Cap</span>
+                            <span class="metric-value" id="marketCap">-</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">P/E Ratio</span>
+                            <span class="metric-value" id="peRatio">-</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">Debt/Equity</span>
+                            <span class="metric-value" id="debtEquity">-</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-label">Free Cash Flow</span>
+                            <span class="metric-value" id="freeCashFlow">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container card">
+                    <div class="chart-header">
+                        <h3>5-Year Financial Trend</h3>
+                        <div class="chart-legend" id="chartLegend"></div>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="financialChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="financial-tables">
+                    <div class="table-section card">
+                        <h3>Income Statement</h3>
+                        <div class="table-container" id="incomeTable"></div>
+                    </div>
+                    
+                    <div class="table-section card">
+                        <h3>Balance Sheet</h3>
+                        <div class="table-container" id="balanceSheetTable"></div>
+                    </div>
+                    
+                    <div class="table-section card">
+                        <h3>Cash Flow Statement</h3>
+                        <div class="table-container" id="cashFlowTable"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="app-footer">
+            <p>Data provided by company filings. © <span id="currentYear"></span> ForensicFinancials</p>
+        </footer>
     </div>
 </body>
 </html>
