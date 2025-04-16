@@ -291,9 +291,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const epsValue = item.epsdiluted !== undefined ? item.epsdiluted : item.eps;
                 return [
                     item.calendarYear,
-                    formatCurrency(item.revenue),
+                    { value: formatCurrency(item.revenue), raw: item.revenue, highlight: 'revenue' },
                     formatCurrency(item.grossProfit),
-                    formatCurrency(item.netIncome),
+                    { value: formatCurrency(item.netIncome), raw: item.netIncome, highlight: 'netIncome' },
                     (epsValue !== undefined && epsValue !== null) ? formatNumber(epsValue) : 'N/A',
                     formatCurrency(item.operatingIncome)
                 ];
@@ -306,8 +306,8 @@ document.addEventListener('DOMContentLoaded', function() {
             balanceSheetData.map(item => [
                 item.calendarYear,
                 formatCurrency(item.totalAssets),
-                formatCurrency(item.totalDebt),
-                formatCurrency(item.totalEquity),
+                { value: formatCurrency(item.totalDebt), raw: item.totalDebt, highlight: 'totalDebt' },
+                { value: formatCurrency(item.totalEquity), raw: item.totalEquity, highlight: 'totalEquity' },
                 formatCurrency(item.cashAndCashEquivalents),
                 formatCurrency(item.totalCurrentAssets)
             ]).reverse()
@@ -318,10 +318,10 @@ document.addEventListener('DOMContentLoaded', function() {
             ['Year', 'Operating CF', 'Investing CF', 'Financing CF', 'Free CF', 'Net Change'],
             cashFlowData.map(item => [
                 item.calendarYear,
-                formatCurrency(item.operatingCashFlow),
+                { value: formatCurrency(item.operatingCashFlow), raw: item.operatingCashFlow, highlight: 'operatingCF' },
                 formatCurrency(item.netCashUsedForInvestingActivites),
                 formatCurrency(item.netCashUsedProvidedByFinancingActivities),
-                formatCurrency(item.freeCashFlow),
+                { value: formatCurrency(item.freeCashFlow), raw: item.freeCashFlow, highlight: 'freeCF' },
                 formatCurrency(item.netChangeInCash)
             ]).reverse()
         );
@@ -336,7 +336,52 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error("Expected row data to be an array, but received:", row);
                 return '';
             }
-            const cells = row.map(cell => `<td>${cell !== undefined && cell !== null ? cell : 'N/A'}</td>`).join('');
+            
+            const cells = row.map((cell, index) => {
+                // Skip first column (Year)
+                if (index === 0) {
+                    return `<td>${cell !== undefined && cell !== null ? cell : 'N/A'}</td>`;
+                }
+                
+                // Check if cell is an object with highlight info
+                if (cell && typeof cell === 'object' && cell.value !== undefined) {
+                    const value = cell.value;
+                    const rawValue = cell.raw;
+                    const highlightType = cell.highlight;
+                    
+                    // Basic positive/negative formatting
+                    let classes = [];
+                    if (typeof rawValue === 'number') {
+                        classes.push(rawValue >= 0 ? 'positive-value' : 'negative-value');
+                        
+                        // Apply additional highlighting based on type
+                        if (highlightType) {
+                            // For income statement
+                            if (highlightType === 'revenue' && rawValue > 0) {
+                                classes.push('highlight-positive');
+                            } else if (highlightType === 'netIncome') {
+                                classes.push(rawValue >= 0 ? 'highlight-positive' : 'highlight-negative');
+                            }
+                            // For balance sheet
+                            else if (highlightType === 'totalDebt' && rawValue > 0) {
+                                classes.push('highlight-negative'); // High debt is generally negative
+                            } else if (highlightType === 'totalEquity') {
+                                classes.push(rawValue >= 0 ? 'highlight-positive' : 'highlight-negative');
+                            }
+                            // For cash flow
+                            else if (highlightType === 'operatingCF' || highlightType === 'freeCF') {
+                                classes.push(rawValue >= 0 ? 'highlight-positive' : 'highlight-negative');
+                            }
+                        }
+                    }
+                    
+                    return `<td class="${classes.join(' ')}">${value}</td>`;
+                }
+                
+                // Regular cell
+                return `<td>${cell !== undefined && cell !== null ? cell : 'N/A'}</td>`;
+            }).join('');
+            
             return `<tr>${cells}</tr>`;
         }).join('');
 
