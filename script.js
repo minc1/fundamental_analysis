@@ -19,17 +19,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const metricYearEls = document.querySelectorAll('.metric-year');
     // Chart and table elements
     const chartLegend = document.getElementById('chartLegend');
+    const metricsLegend = document.getElementById('metricsLegend');
     const incomeTable = document.getElementById('incomeTable');
     const balanceSheetTable = document.getElementById('balanceSheetTable');
     const cashFlowTable = document.getElementById('cashFlowTable');
 
-    let financialChart = null;
-    const chartColors = [
-        '#1c2541', // Navy - Revenue (var(--navy))
-        '#c5a47e', // Gold - Net Income (var(--gold))
-        '#6c757d', // Gray - Operating Cash Flow (previously Pastel Gold)
-        '#f3e1bb', // Pastel Gold - Free Cash Flow (previously Total Debt color)
-        '#212529'  // Dark - Unused now
+    let revenueChart = null;
+    let metricsChart = null;
+    const revenueColor = '#1c2541'; // Navy
+    const metricsColors = [
+        '#c5a47e', // Gold - Net Income
+        '#6c757d', // Gray - Operating Cash Flow
+        '#f3e1bb'  // Pastel Gold - Free Cash Flow
     ];
 
     // Event listeners
@@ -40,16 +41,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Create chart legend
     function createChartLegend() {
-        const labels = [
-            'Revenue',
-            'Net Income',
-            'Operating Cash Flow',
-            'Free Cash Flow'
-        ];
+        const revenueLabels = ['Revenue'];
+        const metricsLabels = ['Net Income', 'Operating Cash Flow', 'Free Cash Flow'];
 
-        chartLegend.innerHTML = labels.map((label, i) => `
+        chartLegend.innerHTML = revenueLabels.map((label, i) => `
             <div class="chart-legend-item">
-                <span class="chart-legend-color" style="background-color: ${chartColors[i]}"></span>
+                <span class="chart-legend-color" style="background-color: ${revenueColor}"></span>
+                ${label}
+            </div>
+        `).join('');
+
+        metricsLegend.innerHTML = metricsLabels.map((label, i) => `
+            <div class="chart-legend-item">
+                <span class="chart-legend-color" style="background-color: ${metricsColors[i]};"></span>
                 ${label}
             </div>
         `).join('');
@@ -153,7 +157,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // --- End Key Metrics ---
 
         // Create financial charts
-        createFinancialCharts(incomeData, cashFlowData, balanceSheetData);
+        createFinancialChart(incomeData, cashFlowData, balanceSheetData);
 
         // Create tables
         createFinancialTables(incomeData, cashFlowData, balanceSheetData);
@@ -166,99 +170,100 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Create the financial charts
-    function createFinancialCharts(incomeData, cashFlowData, balanceSheetData) {
+    function createFinancialChart(incomeData, cashFlowData, balanceSheetData) {
         const years = incomeData.map(item => item.calendarYear);
+        
+        // Destroy existing charts if they exist
+        if (revenueChart) revenueChart.destroy();
+        if (metricsChart) metricsChart.destroy();
 
-        const revenueChartConfig = {
-            type: 'line',
-            data: {
-                labels: years,
-                datasets: [{
-                    label: 'Revenue',
-                    data: incomeData.map(item => item.revenue),
-                    borderColor: chartColors[0],
-                    backgroundColor: chartColors[0],
-                    fill: false
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Revenue Over Time'
-                    }
+        // Revenue Chart
+        revenueChart = new Chart(
+            document.getElementById('revenueChart'),
+            {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [{
+                        label: 'Revenue',
+                        data: incomeData.map(item => item.revenue),
+                        borderColor: revenueColor,
+                        backgroundColor: revenueColor,
+                        borderWidth: 2,
+                        tension: 0.4
+                    }]
                 },
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Date'
-                        }
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
                     },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Revenue'
-                        },
-                        beginAtZero: true
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value, true);
+                                }
+                            }
+                        }
                     }
                 }
             }
-        };
+        );
 
-        const metricsChartConfig = {
-            type: 'line',
-            data: {
-                labels: years,
-                datasets: [{
-                    label: 'Net Income',
-                    data: incomeData.map(item => item.netIncome),
-                    borderColor: chartColors[1],
-                    backgroundColor: chartColors[1],
-                    fill: false
-                }, {
-                    label: 'Operating Cash Flow',
-                    data: cashFlowData.map(item => item.operatingCashFlow),
-                    borderColor: chartColors[2],
-                    backgroundColor: chartColors[2],
-                    fill: false
-                }, {
-                    label: 'Free Cash Flow',
-                    data: cashFlowData.map(item => item.freeCashFlow),
-                    borderColor: chartColors[3],
-                    backgroundColor: chartColors[3],
-                    fill: false
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Financial Metrics Over Time'
-                    }
-                },
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Date'
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Value'
+        // Metrics Chart
+        metricsChart = new Chart(
+            document.getElementById('metricsChart'),
+            {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [
+                        {
+                            label: 'Net Income',
+                            data: incomeData.map(item => item.netIncome),
+                            borderColor: metricsColors[0],
+                            backgroundColor: metricsColors[0],
+                            borderWidth: 2,
+                            tension: 0.4
                         },
-                        beginAtZero: true
+                        {
+                            label: 'Operating Cash Flow',
+                            data: cashFlowData.map(item => item.operatingCashFlow),
+                            borderColor: metricsColors[1],
+                            backgroundColor: metricsColors[1],
+                            borderWidth: 2,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Free Cash Flow',
+                            data: cashFlowData.map(item => item.freeCashFlow),
+                            borderColor: metricsColors[2],
+                            backgroundColor: metricsColors[2],
+                            borderWidth: 2,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value, true);
+                                }
+                            }
+                        }
                     }
                 }
             }
-        };
-
-        const revenueChart = new Chart(document.getElementById('revenueChart'), revenueChartConfig);
-        const metricsChart = new Chart(document.getElementById('metricsChart'), metricsChartConfig);
+        );
     }
 
     // Create financial tables
