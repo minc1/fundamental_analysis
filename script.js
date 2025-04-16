@@ -27,8 +27,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const chartColors = [
         '#1c2541', // Navy - Revenue (var(--navy))
         '#c5a47e', // Gold - Net Income (var(--gold))
-        '#6c757d', // Gray - Operating Cash Flow (var(--gray-color))
-        '#212529'  // Dark - Free Cash Flow (var(--dark-color))
+        '#6c757d', // Gray - Operating Cash Flow (previously Pastel Gold)
+        '#f3e1bb', // Pastel Gold - Free Cash Flow (previously Total Debt color)
+        '#212529'  // Dark - Unused now
     ];
 
     // Event listeners
@@ -43,7 +44,6 @@ document.addEventListener('DOMContentLoaded', function() {
             'Revenue',
             'Net Income',
             'Operating Cash Flow',
-            'Total Debt',
             'Free Cash Flow'
         ];
 
@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 label: 'Revenue',
                 data: incomeData.map(item => item.revenue),
                 borderColor: chartColors[0],
-                backgroundColor: chartColors[0] + '33',
+                backgroundColor: chartColors[0],
                 pointBackgroundColor: chartColors[0],
                 pointBorderColor: chartColors[0],
                 borderWidth: 2,
@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 label: 'Net Income',
                 data: incomeData.map(item => item.netIncome),
                 borderColor: chartColors[1],
-                backgroundColor: chartColors[1] + '33',
+                backgroundColor: chartColors[1],
                 pointBackgroundColor: chartColors[1],
                 pointBorderColor: chartColors[1],
                 borderWidth: 2,
@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 label: 'Operating Cash Flow',
                 data: cashFlowData.map(item => item.operatingCashFlow),
                 borderColor: chartColors[2],
-                backgroundColor: chartColors[2] + '33',
+                backgroundColor: chartColors[2],
                 pointBackgroundColor: chartColors[2],
                 pointBorderColor: chartColors[2],
                 borderWidth: 2,
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 label: 'Free Cash Flow',
                 data: cashFlowData.map(item => item.freeCashFlow),
                 borderColor: chartColors[3],
-                backgroundColor: chartColors[3] + '33',
+                backgroundColor: chartColors[3],
                 pointBackgroundColor: chartColors[3],
                 pointBorderColor: chartColors[3],
                 borderWidth: 2,
