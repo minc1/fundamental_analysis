@@ -9,6 +9,10 @@
     --border-radius: 8px;
     --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     --transition: all 0.3s ease;
+    --chart-navy: var(--navy);
+    --chart-gold: var(--gold);
+    --chart-gray: var(--gray-color);
+    --chart-pastel-gold: var(--pastel-gold);
 }
 
 * {
@@ -236,6 +240,7 @@ body {
     display: flex;
     align-items: center;
     font-size: 0.8rem;
+    cursor: pointer;
 }
 
 .chart-legend-color {
@@ -316,7 +321,7 @@ table.financial-table {
 }
 
 .financial-table tbody tr:hover {
-    background: #f3e1bb44; /* light gold highlight on hover */
+    background: #f3e1bb44;
 }
 
 .financial-table td {
@@ -356,7 +361,7 @@ table.financial-table {
     }
 
     .chart-wrapper {
-        height: 300px;
+        height: 260px;
     }
 
     .chart-legend {
@@ -364,13 +369,12 @@ table.financial-table {
     }
 }
 
-/* Conditional formatting for financial tables */
 .financial-table td .positive-value {
-    color: #4E6851; /* Green color for positive values */
+    color: #4E6851;
 }
 
 .financial-table td .negative-value {
-    color: #B83A2D; /* Red color for negative values */
+    color: #B83A2D;
 }
 
 .financial-table td .highlight-positive {
