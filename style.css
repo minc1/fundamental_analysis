@@ -9,6 +9,9 @@
     --border-radius: 8px;
     --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     --transition: all 0.3s ease;
+    /* Conditional Formatting Colors */
+    --cond-red: #B83A2d;   /* User specified red */
+    --cond-green: #4E6851; /* User specified green */
 }
 
 * {
@@ -183,7 +186,7 @@ body {
 }
 
 .metric-card {
-    background-color: white;
+    background-color: var(--navy);
     padding: 1rem 1.5rem;
     border-radius: var(--border-radius);
     min-width: 180px;
@@ -195,19 +198,20 @@ body {
 .metric-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    background-color: #2a3a5f;
 }
 
 .metric-label {
     display: block;
     font-size: 0.9rem;
-    color: var(--navy);
+    color: white;
     margin-bottom: 0.5rem;
 }
 
 .metric-value {
     font-size: 1.2rem;
     font-weight: 600;
-    color: var(--navy);
+    color: white;
 }
 
 .chart-container {
@@ -321,6 +325,110 @@ table.financial-table {
 .financial-table td {
     font-weight: 400;
     transition: background 0.2s;
+}
+
+/* Conditional Formatting for Critical Columns */
+/* Applied via JS based on column header/data key */
+
+/* Income Statement: Revenue and Net Income */
+.income-revenue-positive {
+    color: var(--cond-green);
+    font-weight: 500;
+}
+
+.income-revenue-negative {
+    color: var(--cond-red);
+    font-weight: 500;
+}
+
+.income-revenue-yoy-increase {
+    background-color: rgba(78, 104, 81, 0.1); /* Light green */
+}
+
+.income-revenue-yoy-decrease {
+    background-color: rgba(184, 58, 45, 0.1); /* Light red */
+}
+
+.income-netincome-positive {
+    color: var(--cond-green);
+    font-weight: 600;
+}
+
+.income-netincome-negative {
+    color: var(--cond-red);
+    font-weight: 600;
+}
+
+.income-netincome-yoy-increase {
+    background-color: rgba(78, 104, 81, 0.15); /* Slightly darker green */
+}
+
+.income-netincome-yoy-decrease {
+    background-color: rgba(184, 58, 45, 0.15); /* Slightly darker red */
+}
+
+/* Balance Sheet: Total Assets and Total Liabilities */
+.balance-assets-positive {
+    color: var(--cond-green);
+    font-weight: 500;
+}
+
+.balance-assets-yoy-increase {
+    background-color: rgba(78, 104, 81, 0.1);
+}
+
+.balance-assets-yoy-decrease {
+    background-color: rgba(184, 58, 45, 0.1);
+}
+
+.balance-liabilities-positive {
+    color: var(--cond-red); /* Liabilities are 'negative' in terms of financial health */
+    font-weight: 500;
+}
+
+.balance-liabilities-yoy-increase {
+    background-color: rgba(184, 58, 45, 0.1); /* Increase in liabilities is concerning */
+}
+
+.balance-liabilities-yoy-decrease {
+    background-color: rgba(78, 104, 81, 0.1); /* Decrease in liabilities is good */
+}
+
+/* Cash Flow: Operating Cash Flow and Free Cash Flow */
+.cashflow-operating-positive {
+    color: var(--cond-green);
+    font-weight: 600;
+}
+
+.cashflow-operating-negative {
+    color: var(--cond-red);
+    font-weight: 600;
+}
+
+.cashflow-operating-yoy-increase {
+    background-color: rgba(78, 104, 81, 0.15);
+}
+
+.cashflow-operating-yoy-decrease {
+    background-color: rgba(184, 58, 45, 0.15);
+}
+
+.cashflow-free-positive {
+    color: var(--cond-green);
+    font-weight: 600;
+}
+
+.cashflow-free-negative {
+    color: var(--cond-red);
+    font-weight: 600;
+}
+
+.cashflow-free-yoy-increase {
+    background-color: rgba(78, 104, 81, 0.15);
+}
+
+.cashflow-free-yoy-decrease {
+    background-color: rgba(184, 58, 45, 0.15);
 }
 
 .app-footer {
