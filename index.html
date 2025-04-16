@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Statement Analyzer</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Financial Statement Analyzer</h1>
+        
+        <div class="input-group">
+            <label for="ticker">Enter Ticker Symbol:</label>
+            <input type="text" id="ticker" placeholder="e.g. AAPL">
+            <button id="loadData">Load Data</button>
+            <div class="error" id="errorMessage"></div>
+        </div>
+        
+        <div class="loading" id="loadingIndicator">
+            Loading data for <span id="loadingTicker"></span>...
+        </div>
+    </div>
+    
+    <div class="container" id="dataContainer" style="display: none;">
+        <h2 id="companyHeader"></h2>
+        
+        <div class="chart-container">
+            <canvas id="financialChart"></canvas>
+        </div>
+        
+        <h3>Financial Metrics</h3>
+        <div id="tableContainer"></div>
+    </div>
+</body>
+</html>
