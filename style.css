@@ -21,7 +21,7 @@ body {
     font-family: 'Inter', sans-serif;
     line-height: 1.6;
     color: var(--dark-color);
-    background-color: var(--gray-color);
+    background-color: #f5f7fa;
 }
 
 .app-container {
@@ -183,12 +183,18 @@ body {
 }
 
 .metric-card {
-    background-color: var(--gold);
+    background-color: white;
     padding: 1rem 1.5rem;
     border-radius: var(--border-radius);
     min-width: 180px;
     text-align: center;
-    border: 2px solid #6c757d;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+}
+
+.metric-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
 .metric-label {
