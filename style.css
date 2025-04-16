@@ -183,7 +183,7 @@ body {
 }
 
 .metric-card {
-    background-color: var(--pastel-gold);
+    background-color: var(--gold);
     padding: 1rem 1.5rem;
     border-radius: var(--border-radius);
     min-width: 180px;
