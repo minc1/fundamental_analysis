@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 pointBackgroundColor: chartColors[0],
                 pointBorderColor: chartColors[0],
                 borderWidth: 2,
-                tension: 0.1,
+                tension: 0.4,
                 yAxisID: 'y'
             },
             {
@@ -189,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 pointBackgroundColor: chartColors[1],
                 pointBorderColor: chartColors[1],
                 borderWidth: 2,
-                tension: 0.1,
+                tension: 0.4,
                 yAxisID: 'y'
             },
             {
@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 pointBackgroundColor: chartColors[2],
                 pointBorderColor: chartColors[2],
                 borderWidth: 2,
-                tension: 0.1,
+                tension: 0.4,
                 yAxisID: 'y'
             },
             {
@@ -211,7 +211,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 pointBackgroundColor: chartColors[3],
                 pointBorderColor: chartColors[3],
                 borderWidth: 2,
-                tension: 0.1,
+                tension: 0.4,
                 yAxisID: 'y'
             },
             {
@@ -222,7 +222,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 pointBackgroundColor: chartColors[4],
                 pointBorderColor: chartColors[4],
                 borderWidth: 2,
-                tension: 0.1,
+                tension: 0.4,
                 yAxisID: 'y'
             }
         ];
@@ -253,12 +253,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         position: 'left',
                         ticks: {
                             callback: function(value) {
-                                // Use formatCurrency for axis labels as they represent large values
-                                return formatCurrency(value, true); // Pass true to force abbreviation
-                            }
+                                return formatCurrency(value, true);
+                            },
+                            precision: 0 // This ensures no decimal points on y-axis
                         },
                         grid: {
-                            drawOnChartArea: true
+                            display: false
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
                         }
                     }
                 },
@@ -270,14 +275,18 @@ document.addEventListener('DOMContentLoaded', function() {
                                 if (label) {
                                     label += ': ';
                                 }
-                                // Use formatCurrency for tooltips as well
                                 label += formatCurrency(context.raw);
                                 return label;
                             }
                         }
                     },
                     legend: {
-                        display: false // Using custom legend
+                        display: false
+                    }
+                },
+                elements: {
+                    line: {
+                        tension: 0.4
                     }
                 }
             }
@@ -288,19 +297,18 @@ document.addEventListener('DOMContentLoaded', function() {
     function createFinancialTables(incomeData, cashFlowData, balanceSheetData) {
         // Income Statement Table - Updated EPS Header and Data Fetch
         incomeTable.innerHTML = createTableHTML(
-            ['Year', 'Revenue', 'Gross Profit', 'Net Income', 'Diluted EPS', 'Operating Income'], // <-- Updated Header
+            ['Year', 'Revenue', 'Gross Profit', 'Net Income', 'Diluted EPS', 'Operating Income'],
             incomeData.map(item => {
-                // Prefer 'epsdiluted', fallback to 'eps'
                 const epsValue = item.epsdiluted !== undefined ? item.epsdiluted : item.eps;
                 return [
                     item.calendarYear,
                     formatCurrency(item.revenue),
                     formatCurrency(item.grossProfit),
                     formatCurrency(item.netIncome),
-                    (epsValue !== undefined && epsValue !== null) ? formatNumber(epsValue) : 'N/A', // <-- Use formatNumber and fetch correct value
+                    (epsValue !== undefined && epsValue !== null) ? formatNumber(epsValue) : 'N/A',
                     formatCurrency(item.operatingIncome)
                 ];
-            }).reverse() // Display latest year first in tables
+            }).reverse()
         );
 
         // Balance Sheet Table
@@ -322,7 +330,7 @@ document.addEventListener('DOMContentLoaded', function() {
             cashFlowData.map(item => [
                 item.calendarYear,
                 formatCurrency(item.operatingCashFlow),
-                formatCurrency(item.netCashUsedForInvestingActivites), // Check API source for exact key name if issues arise
+                formatCurrency(item.netCashUsedForInvestingActivites),
                 formatCurrency(item.netCashUsedProvidedByFinancingActivities),
                 formatCurrency(item.freeCashFlow),
                 formatCurrency(item.netChangeInCash)
@@ -359,8 +367,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function formatNumber(value) {
         if (value === undefined || value === null || typeof value !== 'number') return 'N/A';
 
-        // Use Intl.NumberFormat for consistent number formatting (e.g., commas)
-        // Typically use 2 decimal places for ratios and per-share values
         const formatter = new Intl.NumberFormat('en-US', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
@@ -368,61 +374,49 @@ document.addEventListener('DOMContentLoaded', function() {
         return formatter.format(value);
     }
 
-
     // Helper function to format large currency values (with M/B suffixes)
-    // Added 'forceAbbreviate' for axis ticks
     function formatCurrency(value, forceAbbreviate = false) {
         if (value === undefined || value === null || typeof value !== 'number') return 'N/A';
 
         const absValue = Math.abs(value);
         let suffix = '';
         let divisor = 1;
-        let minimumFractionDigits = 0; // Default for whole numbers
+        let minimumFractionDigits = 0;
 
-        // Determine suffix and divisor
         if (absValue >= 1000000000) {
             suffix = 'B';
             divisor = 1000000000;
-            minimumFractionDigits = 2; // Show decimals for Billions
+            minimumFractionDigits = 2;
         } else if (absValue >= 1000000) {
             suffix = 'M';
             divisor = 1000000;
-            minimumFractionDigits = 2; // Show decimals for Millions
+            minimumFractionDigits = 2;
         } else if (forceAbbreviate && absValue >= 1000) {
-             // Only add K if forced (e.g., for crowded axis)
              suffix = 'K';
              divisor = 1000;
-             minimumFractionDigits = absValue < 10000 ? 1 : 0; // Fewer decimals for K unless small K
+             minimumFractionDigits = absValue < 10000 ? 1 : 0;
         } else if (absValue < 10) {
-             minimumFractionDigits = 2; // Show decimals for small currency values if not abbreviating
+             minimumFractionDigits = 2;
         }
 
-
-        // Use Intl.NumberFormat for the number part
         const formatter = new Intl.NumberFormat('en-US', {
             style: 'currency',
-            currency: 'USD', // Assuming USD
+            currency: 'USD',
             minimumFractionDigits: minimumFractionDigits,
-            maximumFractionDigits: minimumFractionDigits > 0 ? minimumFractionDigits : 0 // Match min decimals or use 0
+            maximumFractionDigits: minimumFractionDigits > 0 ? minimumFractionDigits : 0
         });
 
-        // Format the (potentially divided) value
-        let formattedValue = formatter.format(value / divisor);
-
-        // Append suffix if needed, remove currency symbol if suffix exists
         if (suffix) {
-             formattedValue = formattedValue.replace('$', ''); // Remove currency symbol
+             formattedValue = formatter.format(value / divisor).replace('$', '');
              return `$${formattedValue}${suffix}`;
         } else {
-            return formattedValue; // Return full currency format
+            return formatter.format(value);
         }
     }
-
 
     // Show error message
     function showError(message) {
         errorMessage.textContent = message;
         errorMessage.style.display = 'block';
     }
-
 });
