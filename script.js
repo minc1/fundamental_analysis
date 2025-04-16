@@ -236,16 +236,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 scales: {
                     y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Values'
-                        },
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
                         ticks: {
-                            stepSize: 1,
                             callback: function(value) {
-                                return Math.floor(value);
-                            }
+                                // Use Intl.NumberFormat for precise control over decimals
+                                return new Intl.NumberFormat('en-US', {
+                                    style: 'decimal', // Use 'currency' if you need the symbol, adjust currency code
+                                    // currency: 'USD', 
+                                    minimumFractionDigits: 0,
+                                    maximumFractionDigits: 0
+                                }).format(value);
+                            },
+                            precision: 0 // Keep this as it might influence scale calculation
+                        },
+                        grid: {
+                            display: false
                         }
                     },
                     x: {
