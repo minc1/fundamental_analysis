@@ -152,8 +152,8 @@ document.addEventListener('DOMContentLoaded', function() {
         epsEl.textContent = dilutedEpsValue;
         // --- End Key Metrics ---
 
-        // Create financial chart
-        createFinancialChart(incomeData, cashFlowData, balanceSheetData);
+        // Create financial charts
+        createFinancialCharts(incomeData, cashFlowData, balanceSheetData);
 
         // Create tables
         createFinancialTables(incomeData, cashFlowData, balanceSheetData);
@@ -165,121 +165,100 @@ document.addEventListener('DOMContentLoaded', function() {
         dataContainer.style.display = 'block';
     }
 
-    // Create the financial chart
-    function createFinancialChart(incomeData, cashFlowData, balanceSheetData) {
+    // Create the financial charts
+    function createFinancialCharts(incomeData, cashFlowData, balanceSheetData) {
         const years = incomeData.map(item => item.calendarYear);
-        const datasets = [
-            {
-                label: 'Revenue',
-                data: incomeData.map(item => item.revenue),
-                borderColor: chartColors[0],
-                backgroundColor: chartColors[0],
-                pointBackgroundColor: chartColors[0],
-                pointBorderColor: chartColors[0],
-                borderWidth: 2,
-                tension: 0.4,
-                yAxisID: 'y'
-            },
-            {
-                label: 'Net Income',
-                data: incomeData.map(item => item.netIncome),
-                borderColor: chartColors[1],
-                backgroundColor: chartColors[1],
-                pointBackgroundColor: chartColors[1],
-                pointBorderColor: chartColors[1],
-                borderWidth: 2,
-                tension: 0.4,
-                yAxisID: 'y'
-            },
-            {
-                label: 'Operating Cash Flow',
-                data: cashFlowData.map(item => item.operatingCashFlow),
-                borderColor: chartColors[2],
-                backgroundColor: chartColors[2],
-                pointBackgroundColor: chartColors[2],
-                pointBorderColor: chartColors[2],
-                borderWidth: 2,
-                tension: 0.4,
-                yAxisID: 'y'
-            },
-            {
-                label: 'Free Cash Flow',
-                data: cashFlowData.map(item => item.freeCashFlow),
-                borderColor: chartColors[3],
-                backgroundColor: chartColors[3],
-                pointBackgroundColor: chartColors[3],
-                pointBorderColor: chartColors[3],
-                borderWidth: 2,
-                tension: 0.4,
-                yAxisID: 'y'
-            }
-        ];
 
-        const ctx = document.getElementById('financialChart').getContext('2d');
-
-        if (financialChart) {
-            financialChart.destroy();
-        }
-
-        financialChart = new Chart(ctx, {
+        const revenueChartConfig = {
             type: 'line',
             data: {
                 labels: years,
-                datasets: datasets
+                datasets: [{
+                    label: 'Revenue',
+                    data: incomeData.map(item => item.revenue),
+                    borderColor: chartColors[0],
+                    backgroundColor: chartColors[0],
+                    fill: false
+                }]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Revenue Over Time'
+                    }
                 },
                 scales: {
-                    y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        ticks: {
-                            callback: function(value) {
-                                // Use formatCurrency for precise control over decimals
-                                return formatCurrency(value, true);
-                            },
-                            precision: 0 // Keep this as it might influence scale calculation
-                        },
-                        grid: {
-                            display: false
-                        }
-                    },
                     x: {
-                        grid: {
-                            display: false
-                        }
-                    }
-                },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                label += formatCurrency(context.raw);
-                                return label;
-                            }
+                        title: {
+                            display: true,
+                            text: 'Date'
                         }
                     },
-                    legend: {
-                        display: false
-                    }
-                },
-                elements: {
-                    line: {
-                        tension: 0.4
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Revenue'
+                        },
+                        beginAtZero: true
                     }
                 }
             }
-        });
+        };
+
+        const metricsChartConfig = {
+            type: 'line',
+            data: {
+                labels: years,
+                datasets: [{
+                    label: 'Net Income',
+                    data: incomeData.map(item => item.netIncome),
+                    borderColor: chartColors[1],
+                    backgroundColor: chartColors[1],
+                    fill: false
+                }, {
+                    label: 'Operating Cash Flow',
+                    data: cashFlowData.map(item => item.operatingCashFlow),
+                    borderColor: chartColors[2],
+                    backgroundColor: chartColors[2],
+                    fill: false
+                }, {
+                    label: 'Free Cash Flow',
+                    data: cashFlowData.map(item => item.freeCashFlow),
+                    borderColor: chartColors[3],
+                    backgroundColor: chartColors[3],
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Financial Metrics Over Time'
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Value'
+                        },
+                        beginAtZero: true
+                    }
+                }
+            }
+        };
+
+        const revenueChart = new Chart(document.getElementById('revenueChart'), revenueChartConfig);
+        const metricsChart = new Chart(document.getElementById('metricsChart'), metricsChartConfig);
     }
 
     // Create financial tables

@@ -71,11 +71,29 @@
 
                 <div class="chart-container card">
                     <div class="chart-header">
+                        <h3>Revenue Trend</h3>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-container card">
+                    <div class="chart-header">
                         <h3>10-Year Financial Trend</h3>
                         <div class="chart-legend" id="chartLegend"></div>
                     </div>
                     <div class="chart-wrapper">
                         <canvas id="financialChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-container card">
+                    <div class="chart-header">
+                        <h3>Metrics Trend</h3>
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="metricsChart"></canvas>
                     </div>
                 </div>
 
@@ -99,7 +117,7 @@
         </main>
 
         <footer class="app-footer">
-            <p>Data provided by company filings. © <span id="currentYear"></span> ForensicFinancials</p>
+            <p>Data provided by company filings. &copy; <span id="currentYear"></span> ForensicFinancials</p>
         </footer>
     </div>
 </body>
