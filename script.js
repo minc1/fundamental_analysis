@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const debtEquityEl = document.getElementById('debtEquity');
     const freeCashFlowEl = document.getElementById('freeCashFlow');
     const epsEl = document.getElementById('eps'); // Represents Diluted EPS value now
+    // Get all metric year spans
     const metricYearEls = document.querySelectorAll('.metric-year');
     // Chart and table elements
     const chartLegend = document.getElementById('chartLegend');
@@ -72,11 +73,23 @@ document.addEventListener('DOMContentLoaded', function() {
         dataContainer.style.display = 'none';
 
         try {
+            // Construct file paths assuming DATA/TICKER/filename.json structure
+            const incomePath = `${ticker}/income_statement_annual.json`;
+            const cashFlowPath = `${ticker}/cash_flow_statement_annual.json`;
+            const balanceSheetPath = `${ticker}/balance_sheet_statement_annual.json`;
+
             const [incomeData, cashFlowData, balanceSheetData] = await Promise.all([
-                fetchData(`${ticker}/income_statement_annual.json`),
-                fetchData(`${ticker}/cash_flow_statement_annual.json`),
-                fetchData(`${ticker}/balance_sheet_statement_annual.json`)
+                fetchData(incomePath),
+                fetchData(cashFlowPath),
+                fetchData(balanceSheetPath)
             ]);
+
+            // Check if data arrays are empty
+             if (!incomeData || incomeData.length === 0 ||
+                 !cashFlowData || cashFlowData.length === 0 ||
+                 !balanceSheetData || balanceSheetData.length === 0) {
+                 throw new Error(`Incomplete or missing financial data for ${ticker}.`);
+             }
 
             processFinancialData(ticker, incomeData, cashFlowData, balanceSheetData);
 
@@ -92,35 +105,45 @@ document.addEventListener('DOMContentLoaded', function() {
     async function fetchData(path) {
         const response = await fetch(`DATA/${path}`);
         if (!response.ok) {
-            throw new Error(`Data not found for ${path.split('/')[0]}`);
+             if (response.status === 404) {
+                 throw new Error(`Data file not found at ${path}. Ensure ticker is correct and data exists.`);
+             } else {
+                throw new Error(`HTTP error ${response.status} fetching ${path}`);
+             }
         }
-        return response.json();
+        try {
+            return await response.json();
+        } catch (jsonError) {
+            throw new Error(`Failed to parse JSON from ${path}: ${jsonError.message}`);
+        }
     }
 
     // Process and display the financial data
     function processFinancialData(ticker, incomeData, cashFlowData, balanceSheetData) {
-        // Sort data by calendar year (oldest first for chart)
-        incomeData.sort((a, b) => a.calendarYear - b.calendarYear);
-        cashFlowData.sort((a, b) => a.calendarYear - b.calendarYear);
-        balanceSheetData.sort((a, b) => a.calendarYear - b.calendarYear);
+        // Sort data by calendar year (oldest first for chart consistency)
+        // Use localeCompare for robust string comparison if years are strings,
+        // or subtraction if they are numbers. Assuming numbers here based on JSON.
+        incomeData.sort((a, b) => parseInt(a.calendarYear, 10) - parseInt(b.calendarYear, 10));
+        cashFlowData.sort((a, b) => parseInt(a.calendarYear, 10) - parseInt(b.calendarYear, 10));
+        balanceSheetData.sort((a, b) => parseInt(a.calendarYear, 10) - parseInt(b.calendarYear, 10));
 
         // Update company header
         companyHeader.textContent = `${ticker} Financial Analysis`;
 
-        // Get latest year's data
-        const latestIncome = incomeData.length > 0 ? incomeData[incomeData.length - 1] : null;
-        const latestCashFlow = cashFlowData.length > 0 ? cashFlowData[cashFlowData.length - 1] : null;
-        const latestBalanceSheet = balanceSheetData.length > 0 ? balanceSheetData[balanceSheetData.length - 1] : null;
+        // --- Get latest year's data (last element after sorting oldest to newest) ---
+        const latestIncome = incomeData[incomeData.length - 1];
+        const latestCashFlow = cashFlowData.find(d => d.calendarYear === latestIncome.calendarYear) || cashFlowData[cashFlowData.length - 1]; // Ensure matching year if possible
+        const latestBalanceSheet = balanceSheetData.find(d => d.calendarYear === latestIncome.calendarYear) || balanceSheetData[balanceSheetData.length - 1]; // Ensure matching year
 
         // --- Get Latest Year and Update Labels ---
         const latestYear = latestIncome ? latestIncome.calendarYear : 'N/A';
         metricYearEls.forEach(span => {
-            span.textContent = latestYear;
+            span.textContent = latestYear; // Update all metric year spans
         });
         // --- End Year Update ---
 
 
-        // --- Display Key Metrics (using direct data) ---
+        // --- Display Key Metrics (using data from the *latest* year) ---
 
         // Revenue
         revenueEl.textContent = latestIncome ? formatCurrency(latestIncome.revenue) : 'N/A';
@@ -129,22 +152,26 @@ document.addEventListener('DOMContentLoaded', function() {
         netIncomeEl.textContent = latestIncome ? formatCurrency(latestIncome.netIncome) : 'N/A';
 
         // Debt/Equity Ratio
-        if (latestBalanceSheet && latestBalanceSheet.totalDebt !== undefined && latestBalanceSheet.totalEquity && latestBalanceSheet.totalEquity > 0) {
+        if (latestBalanceSheet && latestBalanceSheet.totalDebt !== undefined && latestBalanceSheet.totalEquity !== undefined && latestBalanceSheet.totalEquity !== 0) {
             const debtEquityRatio = (latestBalanceSheet.totalDebt / latestBalanceSheet.totalEquity);
             // Use formatNumber for ratios/non-currency numbers
             debtEquityEl.textContent = formatNumber(debtEquityRatio);
         } else {
-            debtEquityEl.textContent = 'N/A';
+            debtEquityEl.textContent = 'N/A'; // Handle missing data or zero equity
         }
 
         // Free Cash Flow
-        freeCashFlowEl.textContent = latestCashFlow ? formatCurrency(latestCashFlow.freeCashFlow) : 'N/A';
+        // Find the matching cash flow year data, fallback to latest if needed
+        const matchingCashFlow = cashFlowData.find(cf => cf.calendarYear === latestYear) || latestCashFlow;
+        freeCashFlowEl.textContent = matchingCashFlow ? formatCurrency(matchingCashFlow.freeCashFlow) : 'N/A';
 
         // Diluted EPS (Earnings Per Share) - Updated Logic
         let dilutedEpsValue = 'N/A';
         if (latestIncome) {
             // Prefer 'epsdiluted', fallback to 'eps' if not available
-            const epsValue = latestIncome.epsdiluted !== undefined ? latestIncome.epsdiluted : latestIncome.eps;
+            const epsValue = latestIncome.epsdiluted !== undefined && latestIncome.epsdiluted !== null
+                             ? latestIncome.epsdiluted
+                             : latestIncome.eps;
             if (epsValue !== undefined && epsValue !== null) {
                  // Use formatNumber for EPS as it's per-share, not large currency
                 dilutedEpsValue = formatNumber(epsValue);
@@ -153,97 +180,115 @@ document.addEventListener('DOMContentLoaded', function() {
         epsEl.textContent = dilutedEpsValue;
         // --- End Key Metrics ---
 
-        // Create financial chart
+        // Create financial chart using the chronologically sorted data
         createFinancialChart(incomeData, cashFlowData, balanceSheetData);
 
-        // Create tables
-        createFinancialTables(incomeData, cashFlowData, balanceSheetData);
+        // Create tables (reverse the sorted data for newest-first view in tables)
+        createFinancialTables(
+            [...incomeData].reverse(),
+            [...cashFlowData].reverse(),
+            [...balanceSheetData].reverse()
+        );
 
         // Create chart legend
         createChartLegend();
 
         // Show the data container
         dataContainer.style.display = 'block';
+        errorMessage.style.display = 'none'; // Hide error message if data loaded successfully
     }
 
     // Create the financial chart
     function createFinancialChart(incomeData, cashFlowData, balanceSheetData) {
+        // Extract years from the sorted income data for the X-axis
         const years = incomeData.map(item => item.calendarYear);
+
+        // Helper to get data for a specific year, returning null if not found
+        const getDataForYear = (dataArray, year, field) => {
+            const item = dataArray.find(d => d.calendarYear === year);
+            return item && item[field] !== undefined ? item[field] : null; // Return null for missing points
+        };
+
         const datasets = [
             {
                 label: 'Revenue',
-                data: incomeData.map(item => item.revenue),
+                data: years.map(year => getDataForYear(incomeData, year, 'revenue')),
                 borderColor: chartColors[0],
                 backgroundColor: 'rgba(28, 37, 65, 0.1)',
                 pointBackgroundColor: chartColors[0],
                 pointBorderColor: chartColors[0],
                 borderWidth: 2,
-                tension: 0.4,
-                yAxisID: 'y'
+                tension: 0.1, // Slightly less curve for financial data
+                yAxisID: 'y',
+                spanGaps: true // Connect lines even if data points are missing (null)
             },
             {
                 label: 'Net Income',
-                data: incomeData.map(item => item.netIncome),
+                data: years.map(year => getDataForYear(incomeData, year, 'netIncome')),
                 borderColor: chartColors[1],
                 backgroundColor: 'rgba(197, 164, 126, 0.1)',
                 pointBackgroundColor: chartColors[1],
                 pointBorderColor: chartColors[1],
                 borderWidth: 2,
-                tension: 0.4,
-                yAxisID: 'y'
+                tension: 0.1,
+                yAxisID: 'y',
+                spanGaps: true
             },
             {
                 label: 'Operating Cash Flow',
-                data: cashFlowData.map(item => item.operatingCashFlow),
+                data: years.map(year => getDataForYear(cashFlowData, year, 'operatingCashFlow')),
                 borderColor: chartColors[2],
                 backgroundColor: 'rgba(243, 225, 187, 0.1)',
                 pointBackgroundColor: chartColors[2],
                 pointBorderColor: chartColors[2],
                 borderWidth: 2,
-                tension: 0.4,
-                yAxisID: 'y'
+                tension: 0.1,
+                yAxisID: 'y',
+                spanGaps: true
             },
             {
                 label: 'Total Debt',
-                data: balanceSheetData.map(item => item.totalDebt),
+                data: years.map(year => getDataForYear(balanceSheetData, year, 'totalDebt')),
                 borderColor: chartColors[3],
                 backgroundColor: 'rgba(108, 117, 125, 0.1)',
                 pointBackgroundColor: chartColors[3],
                 pointBorderColor: chartColors[3],
                 borderWidth: 2,
-                tension: 0.4,
-                yAxisID: 'y'
+                tension: 0.1,
+                yAxisID: 'y',
+                spanGaps: true
             },
             {
                 label: 'Free Cash Flow',
-                data: cashFlowData.map(item => item.freeCashFlow),
+                data: years.map(year => getDataForYear(cashFlowData, year, 'freeCashFlow')),
                 borderColor: chartColors[4],
                 backgroundColor: 'rgba(33, 37, 41, 0.1)',
                 pointBackgroundColor: chartColors[4],
                 pointBorderColor: chartColors[4],
                 borderWidth: 2,
-                tension: 0.4,
-                yAxisID: 'y'
+                tension: 0.1,
+                yAxisID: 'y',
+                spanGaps: true
             }
         ];
 
         const ctx = document.getElementById('financialChart').getContext('2d');
 
         if (financialChart) {
-            financialChart.destroy();
+            financialChart.destroy(); // Destroy previous chart instance
         }
 
         financialChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: years,
+                labels: years, // Use the extracted years for labels
                 datasets: datasets
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 interaction: {
-                    mode: 'index',
+                    mode: 'index', // Show tooltips for all datasets at that index
                     intersect: false
                 },
                 scales: {
@@ -252,18 +297,26 @@ document.addEventListener('DOMContentLoaded', function() {
                         display: true,
                         position: 'left',
                         ticks: {
+                            // Format Y-axis ticks using the currency helper
                             callback: function(value) {
+                                // Use forceAbbreviate=true for concise axis labels
                                 return formatCurrency(value, true);
                             },
-                            precision: 0 // This ensures no decimal points on y-axis
+                            maxTicksLimit: 8 // Limit number of ticks for readability
                         },
                         grid: {
-                            display: false
+                            // drawBorder: false, // Optional: remove axis border
+                            color: 'rgba(0, 0, 0, 0.05)' // Lighter grid lines
                         }
                     },
-                    x: {
+                    x: { // Ensure X axis (years) is configured
+                        display: true,
+                        title: {
+                            display: false, // No need for an 'Year' title if labels are years
+                            text: 'Year'
+                        },
                         grid: {
-                            display: false
+                            display: false // Hide vertical grid lines
                         }
                     }
                 },
@@ -275,40 +328,50 @@ document.addEventListener('DOMContentLoaded', function() {
                                 if (label) {
                                     label += ': ';
                                 }
+                                // Format tooltip values using standard currency format
                                 label += formatCurrency(context.raw);
                                 return label;
                             }
                         }
                     },
                     legend: {
-                        display: false
+                        display: false // Using custom legend above the chart
                     }
                 },
                 elements: {
                     line: {
-                        tension: 0.4
+                        // tension: 0.4 // Removed from here, set per dataset
+                    },
+                    point: {
+                        radius: 3, // Smaller points
+                        hoverRadius: 5 // Larger points on hover
                     }
                 }
             }
         });
     }
 
-    // Create financial tables
+    // Create financial tables (expects data sorted newest first)
     function createFinancialTables(incomeData, cashFlowData, balanceSheetData) {
         // Income Statement Table - Updated EPS Header and Data Fetch
         incomeTable.innerHTML = createTableHTML(
+            // Updated header: 'Diluted EPS'
             ['Year', 'Revenue', 'Gross Profit', 'Net Income', 'Diluted EPS', 'Operating Income'],
             incomeData.map(item => {
-                const epsValue = item.epsdiluted !== undefined ? item.epsdiluted : item.eps;
+                // Prioritize epsdiluted, fallback to eps
+                const epsValue = item.epsdiluted !== undefined && item.epsdiluted !== null
+                                 ? item.epsdiluted
+                                 : item.eps;
                 return [
                     item.calendarYear,
                     formatCurrency(item.revenue),
                     formatCurrency(item.grossProfit),
                     formatCurrency(item.netIncome),
+                    // Format EPS as a number
                     (epsValue !== undefined && epsValue !== null) ? formatNumber(epsValue) : 'N/A',
                     formatCurrency(item.operatingIncome)
                 ];
-            }).reverse()
+            }) // Data is already reversed before calling this function
         );
 
         // Balance Sheet Table
@@ -321,7 +384,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 formatCurrency(item.totalEquity),
                 formatCurrency(item.cashAndCashEquivalents),
                 formatCurrency(item.totalCurrentAssets)
-            ]).reverse()
+            ]) // Data is already reversed
         );
 
         // Cash Flow Table
@@ -330,30 +393,32 @@ document.addEventListener('DOMContentLoaded', function() {
             cashFlowData.map(item => [
                 item.calendarYear,
                 formatCurrency(item.operatingCashFlow),
-                formatCurrency(item.netCashUsedForInvestingActivites),
-                formatCurrency(item.netCashUsedProvidedByFinancingActivities),
+                formatCurrency(item.netCashUsedForInvestingActivites), // Corrected property name if needed
+                formatCurrency(item.netCashUsedProvidedByFinancingActivities), // Corrected property name if needed
                 formatCurrency(item.freeCashFlow),
                 formatCurrency(item.netChangeInCash)
-            ]).reverse()
+            ]) // Data is already reversed
         );
     }
 
     // Helper function to create table HTML
     function createTableHTML(headers, rows) {
+        if (!rows || rows.length === 0) {
+             return '<p class="no-data-message">No data available to display in table.</p>';
+        }
+
         const headerHTML = headers.map(h => `<th>${h}</th>`).join('');
 
         const rowHTML = rows.map(row => {
+            // Basic check if row is an array
             if (!Array.isArray(row)) {
-                console.error("Expected row data to be an array, but received:", row);
-                return '';
+                console.error("Invalid row data for table:", row);
+                return ''; // Skip invalid row
             }
+            // Ensure N/A is shown for undefined/null cells
             const cells = row.map(cell => `<td>${cell !== undefined && cell !== null ? cell : 'N/A'}</td>`).join('');
             return `<tr>${cells}</tr>`;
         }).join('');
-
-        if (!rowHTML) {
-            return '<p>No data available to display.</p>';
-        }
 
         return `
             <table>
@@ -365,8 +430,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Helper function to format general numbers (like ratios, EPS)
     function formatNumber(value) {
-        if (value === undefined || value === null || typeof value !== 'number') return 'N/A';
+        // Check for non-numeric types, null, or undefined
+        if (typeof value !== 'number' || value === null || isNaN(value)) return 'N/A';
 
+        // Format to 2 decimal places
         const formatter = new Intl.NumberFormat('en-US', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
@@ -374,42 +441,69 @@ document.addEventListener('DOMContentLoaded', function() {
         return formatter.format(value);
     }
 
-    // Helper function to format large currency values (with M/B suffixes)
+    // Helper function to format large currency values (with M/B/K suffixes)
     function formatCurrency(value, forceAbbreviate = false) {
-        if (value === undefined || value === null || typeof value !== 'number') return 'N/A';
+        // Check for non-numeric types, null, or undefined
+        if (typeof value !== 'number' || value === null || isNaN(value)) return 'N/A';
 
         const absValue = Math.abs(value);
         let suffix = '';
         let divisor = 1;
-        let minimumFractionDigits = 0;
+        let minimumFractionDigits = 0; // Default for whole numbers or K/M/B
+        let maximumFractionDigits = 0;
 
         if (absValue >= 1000000000) {
             suffix = 'B';
             divisor = 1000000000;
-            minimumFractionDigits = 2;
+            minimumFractionDigits = 2; // Show two decimals for Billions
+            maximumFractionDigits = 2;
         } else if (absValue >= 1000000) {
             suffix = 'M';
             divisor = 1000000;
-            minimumFractionDigits = 2;
+            minimumFractionDigits = 2; // Show two decimals for Millions
+            maximumFractionDigits = 2;
         } else if (forceAbbreviate && absValue >= 1000) {
              suffix = 'K';
              divisor = 1000;
+             // Show 1 decimal for K if less than 10K, otherwise 0
              minimumFractionDigits = absValue < 10000 ? 1 : 0;
-        } else if (absValue < 10) {
-             minimumFractionDigits = 2;
+             maximumFractionDigits = minimumFractionDigits;
+        } else if (absValue < 1000 && absValue !== 0) {
+             // For values less than 1000, show 2 decimal places only if needed (e.g., EPS)
+             // But for large currency, we usually want whole numbers.
+             // Let's default to 0 unless it's a very small number (e.g., < 10)
+             if (absValue < 10) {
+                 minimumFractionDigits = 2;
+                 maximumFractionDigits = 2;
+             } else {
+                 minimumFractionDigits = 0;
+                 maximumFractionDigits = 0;
+             }
+        } else if (value === 0) {
+             minimumFractionDigits = 0;
+             maximumFractionDigits = 0;
         }
+
 
         const formatter = new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'USD',
             minimumFractionDigits: minimumFractionDigits,
-            maximumFractionDigits: minimumFractionDigits > 0 ? minimumFractionDigits : 0
+            maximumFractionDigits: maximumFractionDigits
         });
 
-        if (suffix) {
-             formattedValue = formatter.format(value / divisor).replace('$', '');
+        // Apply divisor and suffix logic
+        let formattedValue;
+        if (divisor > 1) {
+             // Format the divided value, then remove currency symbol to add suffix
+             formattedValue = formatter.format(value / divisor).replace(/[$]/g, ''); // Remove $
+             // Handle potential negative sign placement if Intl puts it before $
+             if (value < 0 && !formattedValue.startsWith('-')) {
+                 formattedValue = '-' + formattedValue;
+             }
              return `$${formattedValue}${suffix}`;
         } else {
+            // No division, just format directly
             return formatter.format(value);
         }
     }
@@ -418,5 +512,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function showError(message) {
         errorMessage.textContent = message;
         errorMessage.style.display = 'block';
+        dataContainer.style.display = 'none'; // Hide data container on error
     }
 });
