@@ -241,13 +241,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         position: 'left',
                         ticks: {
                             callback: function(value) {
-                                // Use Intl.NumberFormat for precise control over decimals
-                                return new Intl.NumberFormat('en-US', {
-                                    style: 'decimal', // Use 'currency' if you need the symbol, adjust currency code
-                                    // currency: 'USD', 
-                                    minimumFractionDigits: 0,
-                                    maximumFractionDigits: 0
-                                }).format(value);
+                                // Use formatCurrency for precise control over decimals
+                                return formatCurrency(value, true);
                             },
                             precision: 0 // Keep this as it might influence scale calculation
                         },
@@ -375,35 +370,41 @@ document.addEventListener('DOMContentLoaded', function() {
         const absValue = Math.abs(value);
         let suffix = '';
         let divisor = 1;
-        let minimumFractionDigits = 0;
+        let minimumFractionDigits = 0; // Default to 0
+        let maximumFractionDigits = 0; // Default to 0
 
         if (absValue >= 1000000000) {
             suffix = 'B';
             divisor = 1000000000;
-            minimumFractionDigits = 2;
         } else if (absValue >= 1000000) {
             suffix = 'M';
             divisor = 1000000;
-            minimumFractionDigits = 2;
         } else if (forceAbbreviate && absValue >= 1000) {
              suffix = 'K';
              divisor = 1000;
-             minimumFractionDigits = absValue < 10000 ? 1 : 0;
         } else if (absValue < 10) {
-             minimumFractionDigits = 2;
+            // Only apply decimals for very small numbers if no suffix is used
+            minimumFractionDigits = 2;
+            maximumFractionDigits = 2;
         }
 
         const formatter = new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'USD',
-            minimumFractionDigits: minimumFractionDigits,
-            maximumFractionDigits: minimumFractionDigits > 0 ? minimumFractionDigits : 0
+            minimumFractionDigits: minimumFractionDigits, // Use the determined fraction digits
+            maximumFractionDigits: maximumFractionDigits // Use the determined fraction digits
         });
 
         if (suffix) {
-             formattedValue = formatter.format(value / divisor).replace('$', '');
+            // Ensure the number being formatted is treated as non-currency for suffix logic
+            const numFormatter = new Intl.NumberFormat('en-US', {
+                 minimumFractionDigits: 0, // Always 0 for K/M/B
+                 maximumFractionDigits: 0 // Always 0 for K/M/B
+            });
+             formattedValue = numFormatter.format(value / divisor); // Format number part only
              return `$${formattedValue}${suffix}`;
         } else {
+            // Use the currency formatter for values without suffixes
             return formatter.format(value);
         }
     }
