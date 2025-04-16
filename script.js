@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorMessage = $('errorMessage');
     const dataContainer = $('dataContainer');
     const companyHeader = $('companyHeader');
-    const chartLegend = $('chartLegend');
 
     const metricYearEls = [...document.querySelectorAll('.metric-year')];
     const metricEls = {
@@ -34,8 +33,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 css.getPropertyValue('--chart-gray').trim() || '#6c757d',
                 css.getPropertyValue('--chart-pastel-gold').trim() || '#f3e1bb'
             ];
+            this.gridColor = '#6c757d33';
         }
-        options() {
+        baseOptions(minVal) {
             return {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -43,7 +43,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 scales: {
                     x: { grid: { display: false } },
                     y: {
-                        grid: { display: false },
+                        grid: {
+                            display: true,
+                            drawBorder: false,
+                            lineWidth: 1,
+                            color: ctx => {
+                                if (ctx.tick.value === 0) return this.gridColor;
+                                return ctx.index % 2 === 0 ? this.gridColor : 'transparent';
+                            }
+                        },
+                        suggestedMin: minVal,
                         ticks: { callback: v => this.currency(v, true), precision: 0 }
                     }
                 },
@@ -51,10 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     legend: { display: false },
                     tooltip: {
                         callbacks: {
-                            label: ctx => {
-                                const l = ctx.dataset.label ? ctx.dataset.label + ': ' : '';
-                                return l + this.currency(ctx.raw);
-                            }
+                            label: ctx => (ctx.dataset.label ? ctx.dataset.label + ': ' : '') + this.currency(ctx.raw)
                         }
                     }
                 },
@@ -76,13 +82,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const chartMgr = new ChartManager();
     const charts = {};
 
-    function buildLegend(chart, container) {
-        container.innerHTML = chart.data.datasets.map((ds, i) =>
+    function ensureLegend(containerElem) {
+        let legend = containerElem.querySelector('.chart-legend');
+        if (!legend) {
+            legend = document.createElement('div');
+            legend.className = 'chart-legend';
+            containerElem.appendChild(legend);
+        }
+        return legend;
+    }
+
+    function buildLegend(chart, legendContainer) {
+        legendContainer.innerHTML = chart.data.datasets.map((ds, i) =>
             `<div class="chart-legend-item" data-index="${i}">
                 <span class="chart-legend-color" style="background:${ds.borderColor}"></span>${ds.label}
             </div>`
         ).join('');
-        container.querySelectorAll('.chart-legend-item').forEach(el => {
+        legendContainer.querySelectorAll('.chart-legend-item').forEach(el => {
             el.addEventListener('click', () => {
                 const idx = +el.dataset.index;
                 chart.toggleDataVisibility(idx);
@@ -92,29 +108,33 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function createLineChart({ canvasId, labels, datasets, legendId }) {
+    function createLineChart({ canvasId, labels, datasets }) {
         if (charts[canvasId]) charts[canvasId].destroy();
-        const styled = datasets.map((ds, i) => {
-            const color = chartMgr.palette[i] || chartMgr.palette[0];
-            return {
-                label: ds.label,
-                data: ds.data,
-                borderColor: color,
-                backgroundColor: color,
-                borderWidth: i === 0 ? 3 : 2,
-                tension: 0.4,
-                yAxisID: 'y',
-                pointRadius: 3,
-                pointHoverRadius: 5
-            };
-        });
-        const c = new Chart($(canvasId).getContext('2d'), {
+        const styled = datasets.map((ds, i) => ({
+            label: ds.label,
+            data: ds.data,
+            borderColor: chartMgr.palette[i] || chartMgr.palette[0],
+            backgroundColor: chartMgr.palette[i] || chartMgr.palette[0],
+            borderWidth: i === 0 ? 3 : 2,
+            tension: 0.4,
+            yAxisID: 'y',
+            pointRadius: 3,
+            pointHoverRadius: 5
+        }));
+        const flatData = styled.flatMap(d => d.data);
+        const maxVal = Math.max(...flatData.map(Math.abs));
+        const minValExisting = Math.min(...flatData);
+        const suggestedMin = Math.min(minValExisting, -(maxVal * 0.05));
+        const canvas = $(canvasId);
+        const chart = new Chart(canvas.getContext('2d'), {
             type: 'line',
             data: { labels, datasets: styled },
-            options: chartMgr.options()
+            options: chartMgr.baseOptions(suggestedMin)
         });
-        charts[canvasId] = c;
-        if (legendId) buildLegend(c, $(legendId));
+        charts[canvasId] = chart;
+        const header = canvas.closest('.chart-container').querySelector('.chart-header');
+        const legendDiv = ensureLegend(header);
+        buildLegend(chart, legendDiv);
     }
 
     function formatNum(v) {
@@ -191,7 +211,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         createLineChart({
             canvasId: 'metricsChart',
-            legendId: 'chartLegend',
             labels: years,
             datasets: [
                 { label: 'Net Income', data: income.map(i => i.netIncome) },

@@ -244,9 +244,9 @@ body {
 }
 
 .chart-legend-color {
-    width: 12px;
-    height: 12px;
-    border-radius: 2px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
     margin-right: 0.5rem;
 }
 
@@ -340,30 +340,24 @@ table.financial-table {
     .app-header h1 {
         font-size: 2rem;
     }
-
     .input-with-button {
         flex-direction: column;
     }
-
     .primary-button {
         justify-content: center;
         padding: 0.75rem;
     }
-
     .company-metrics {
         flex-direction: column;
         align-items: center;
         gap: 1rem;
     }
-
     .metric-card {
         width: 100%;
     }
-
     .chart-wrapper {
         height: 260px;
     }
-
     .chart-legend {
         justify-content: center;
     }
@@ -391,17 +385,14 @@ table.financial-table {
     .app-header, .input-section, .app-footer {
         display: none;
     }
-
     .results-section {
         display: block !important;
     }
-
     .card {
         box-shadow: none;
         border: 1px solid #ddd;
         page-break-inside: avoid;
     }
-
     .table-container {
         max-height: none;
         overflow: visible;
