@@ -283,7 +283,7 @@ table.financial-table {
     text-align: center;
     font-weight: 600;
     background: var(--gold);
-    color: #fff;
+    color: var(--navy);
     border-bottom: 2px solid var(--navy);
     font-size: 1.08rem;
     letter-spacing: 0.01em;

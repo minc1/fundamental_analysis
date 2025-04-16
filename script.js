@@ -27,8 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const chartColors = [
         '#1c2541', // Navy - Revenue (var(--navy))
         '#c5a47e', // Gold - Net Income (var(--gold))
-        '#f3e1bb', // Pastel Gold - Operating Cash Flow (var(--pastel-gold))
-        '#6c757d', // Gray - Total Debt (var(--gray-color))
+        '#6c757d', // Gray - Operating Cash Flow (var(--gray-color))
         '#212529'  // Dark - Free Cash Flow (var(--dark-color))
     ];
 
@@ -174,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 label: 'Revenue',
                 data: incomeData.map(item => item.revenue),
                 borderColor: chartColors[0],
-                backgroundColor: 'rgba(28, 37, 65, 0.1)',
+                backgroundColor: chartColors[0] + '33',
                 pointBackgroundColor: chartColors[0],
                 pointBorderColor: chartColors[0],
                 borderWidth: 2,
@@ -185,7 +184,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 label: 'Net Income',
                 data: incomeData.map(item => item.netIncome),
                 borderColor: chartColors[1],
-                backgroundColor: 'rgba(197, 164, 126, 0.1)',
+                backgroundColor: chartColors[1] + '33',
                 pointBackgroundColor: chartColors[1],
                 pointBorderColor: chartColors[1],
                 borderWidth: 2,
@@ -196,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 label: 'Operating Cash Flow',
                 data: cashFlowData.map(item => item.operatingCashFlow),
                 borderColor: chartColors[2],
-                backgroundColor: 'rgba(243, 225, 187, 0.1)',
+                backgroundColor: chartColors[2] + '33',
                 pointBackgroundColor: chartColors[2],
                 pointBorderColor: chartColors[2],
                 borderWidth: 2,
@@ -204,23 +203,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 yAxisID: 'y'
             },
             {
-                label: 'Total Debt',
-                data: balanceSheetData.map(item => item.totalDebt),
-                borderColor: chartColors[3],
-                backgroundColor: 'rgba(108, 117, 125, 0.1)',
-                pointBackgroundColor: chartColors[3],
-                pointBorderColor: chartColors[3],
-                borderWidth: 2,
-                tension: 0.4,
-                yAxisID: 'y'
-            },
-            {
                 label: 'Free Cash Flow',
                 data: cashFlowData.map(item => item.freeCashFlow),
-                borderColor: chartColors[4],
-                backgroundColor: 'rgba(33, 37, 41, 0.1)',
-                pointBackgroundColor: chartColors[4],
-                pointBorderColor: chartColors[4],
+                borderColor: chartColors[3],
+                backgroundColor: chartColors[3] + '33',
+                pointBackgroundColor: chartColors[3],
+                pointBorderColor: chartColors[3],
                 borderWidth: 2,
                 tension: 0.4,
                 yAxisID: 'y'
