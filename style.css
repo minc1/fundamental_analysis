@@ -28,11 +28,6 @@ body {
     line-height: 1.6;
     color: var(--dark-color);
     background: #f5f7fa;
-    opacity: 0;
-    transition: opacity 0.2s ease-in;
-}
-body.page-loaded {
-    opacity: 1;
 }
 .app-container {
     max-width: 1200px;

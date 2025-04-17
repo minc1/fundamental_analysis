@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ForensicFinancials | Search</title>
+    <meta name="description" content="Search for a company ticker to analyze financials.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <nav class="navbar">
+                <a href="index.html" class="nav-logo">Forensic<span>Financials</span></a>
+                <button id="menuToggle" class="menu-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+                <div class="nav-links">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="search.html" class="nav-link">Search</a>
+                    <a href="index.html#about-us" class="nav-link">About Us</a>
+                    <a href="#" class="nav-link">Contact</a>
+                </div>
+            </nav>
+        </header>
+        <main class="main-content">
+            <div class="search-wrapper reveal">
+                <div class="search-card">
+                    <h2 class="text-center">Search Ticker</h2>
+                    <form id="searchForm">
+                        <div class="input-with-button">
+                            <label for="searchTicker" class="visually-hidden">Enter Company Ticker</label>
+                            <input type="text" id="searchTicker" placeholder="e.g. AAPL, NVDA" aria-label="Enter ticker" autofocus>
+                            <button id="searchButton" class="primary-button" type="submit">
+                                <span class="button-text">Analyze</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+        <footer class="app-footer">
+            <p> ForensicFinancials. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -16,6 +16,14 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="script.js" defer></script>
+    <!-- Smooth fade-in for analyzer page -->
+    <style>
+        body { opacity: 0; transition: opacity 0.2s ease-in; }
+        body.page-loaded { opacity: 1; }
+    </style>
+    <script>
+        window.addEventListener('load', () => document.body.classList.add('page-loaded'));
+    </script>
 </head>
 <body>
     <div class="app-container">
@@ -25,7 +33,7 @@
                 <button id="menuToggle" class="menu-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
                 <div class="nav-links">
                     <a href="index.html" class="nav-link">Home</a>
-                    <a href="analyzer.html" class="nav-link">Analyzer</a>
+                    <a href="search.html" class="nav-link">Search</a>
                     <a href="index.html#about-us" class="nav-link">About Us</a>
                     <a href="#" class="nav-link">Contact</a>
                 </div>
@@ -84,7 +92,7 @@
             </section>
         </main>
         <footer class="app-footer">
-            <p>© <span id="currentYear"></span> ForensicFinancials. All rights reserved.</p>
+            <p> ForensicFinancials. All rights reserved.</p>
         </footer>
     </div>
 </body>

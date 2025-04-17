@@ -1,4 +1,3 @@
-window.addEventListener('load', () => document.body.classList.add('page-loaded'));
 document.addEventListener('DOMContentLoaded', () => {
     const $ = id => document.getElementById(id);
     const $$ = sel => document.querySelectorAll(sel);
@@ -167,6 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingElm.style.display = 'flex';
         errorElm.style.display = 'none';
         dataSection.style.display = 'none';
+        await new Promise(resolve => setTimeout(resolve, 125));
         try {
             const endpoints = ['income_statement_annual','cash_flow_statement_annual','balance_sheet_statement_annual'];
             const [inc, cf, bs] = await Promise.all(endpoints.map(e => fetchJSON(`DATA/${ticker}/${e}.json`)));
@@ -223,3 +223,29 @@ document.addEventListener('DOMContentLoaded', () => {
         errorElm.style.display = 'block';
     }
 });
+
+function setupSearchPage() {
+    const form = document.getElementById('searchForm');
+    if (!form) return;
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+        const ticker = document.getElementById('searchTicker').value.trim().toUpperCase();
+        if (!ticker) return;
+        window.location.href = `analyzer.html?ticker=${encodeURIComponent(ticker)}`;
+    });
+}
+document.addEventListener('DOMContentLoaded', setupSearchPage);
+
+(function() {
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get('ticker');
+    if (t) {
+        const input = document.getElementById('ticker');
+        if (input) {
+            input.value = t;
+            window.addEventListener('load', () => {
+                document.getElementById('loadData')?.click();
+            });
+        }
+    }
+})();
