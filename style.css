@@ -1,3 +1,6 @@
+html {
+    scroll-behavior: smooth;
+}
 :root {
     --navy: #1c2541;
     --gold: #c5a47e;
@@ -430,3 +433,43 @@ table.financial-table {
     }
     .primary-button {
         justify-content: center;
+        padding: .75rem;
+    }
+    .company-metrics {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+    .metric-card {
+        width: 100%;
+    }
+    .chart-wrapper {
+        height: 260px;
+    }
+    .chart-legend {
+        justify-content: center;
+    }
+    .features-section {
+        grid-template-columns: 1fr;
+    }
+}
+@media print {
+    .navbar, .input-section, .app-footer {
+        display: none;
+    }
+    .results-section {
+        display: block !important;
+    }
+    .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+        page-break-inside: avoid;
+    }
+    .table-container {
+        max-height: none;
+        overflow: visible;
+    }
+}
+#about-us {
+    scroll-margin-top: 4rem;
+}

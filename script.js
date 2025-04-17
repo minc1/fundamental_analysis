@@ -21,6 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
             navLinks.classList.toggle('open');
             menuToggle.setAttribute('aria-expanded', navLinks.classList.contains('open'));
         });
+        const links = navLinks.querySelectorAll('.nav-link');
+        links.forEach(link => link.addEventListener('click', () => {
+            navLinks.classList.remove('open');
+            menuToggle.setAttribute('aria-expanded', 'false');
+        }));
     }
     const tickerInput = $('ticker');
     if (!tickerInput) return;

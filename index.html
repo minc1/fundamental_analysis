@@ -19,9 +19,11 @@
         .cta-button{display:inline-flex;align-items:center;gap:.5rem;padding:.75rem 2rem;background:#c5a47e;color:#1c2541;font-weight:600;border-radius:8px;text-decoration:none;transition:all .3s ease}
         .cta-button:hover{background:#f3e1bb;transform:translateY(-2px)}
         .about-section{background:#1c2541;color:#fff;padding:3rem 1rem;border-radius:8px;text-align:center;margin:2rem 0}
-        .about-section h2{font-size:2rem;font-weight:600;margin-bottom:1rem}
-        .about-section ul{list-style-type:none;padding:0}
-        .about-section li{margin:.5rem 0}
+        .about-section h2{font-size:2rem;font-weight:600;display:inline-block;position:relative;margin-bottom:1rem}
+        .about-section h2::after{content:'';display:block;width:50px;height:3px;background:#c5a47e;margin:.5rem auto 0}
+        .about-section ul{list-style:none;padding:0;margin:1.5rem auto 0;max-width:600px;text-align:left}
+        .about-section li{margin:.5rem 0;padding-left:1.5em;position:relative}
+        .about-section li::before{content:'•';position:absolute;left:0;color:#c5a47e}
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -38,7 +40,7 @@
                 <div class="nav-links">
                     <a href="index.html" class="nav-link">Home</a>
                     <a href="analyzer.html" class="nav-link">Analyzer</a>
-                    <a href="#" class="nav-link">About</a>
+                    <a href="#about-us" class="nav-link">About Us</a>
                     <a href="#" class="nav-link">Contact</a>
                 </div>
             </nav>
@@ -46,33 +48,15 @@
         <main class="main-content" id="main-content">
             <section class="hero-section reveal">
                 <h1 class="hero-title">Professional Financial Analysis <span>Made Simple</span></h1>
-                <p class="hero-subtitle">
-                    Unlock deep insights into company financials with our powerful forensic analysis tools.
-                    Make informed investment decisions with clear, actionable data.
-                </p>
-                <a href="analyzer.html" class="cta-button">
-                    Start Analyzing
-                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
-                </a>
+                <p class="hero-subtitle">Unlock deep insights into company financials with our powerful forensic analysis tools. Make informed investment decisions with clear, actionable data.</p>
+                <a href="analyzer.html" class="cta-button">Start Analyzing<i class="fas fa-arrow-right" aria-hidden="true"></i></a>
             </section>
             <section class="features-section">
-                <div class="feature-card reveal">
-                    <div class="feature-icon"><i class="fas fa-chart-line" aria-hidden="true"></i></div>
-                    <h3 class="feature-title">Comprehensive Metrics</h3>
-                    <p>Track revenue growth, profitability, cash flow, and key financial ratios over time.</p>
-                </div>
-                <div class="feature-card reveal">
-                    <div class="feature-icon"><i class="fas fa-table" aria-hidden="true"></i></div>
-                    <h3 class="feature-title">Detailed Statements</h3>
-                    <p>View complete income statements, balance sheets, and cash flow statements.</p>
-                </div>
-                <div class="feature-card reveal">
-                    <div class="feature-icon"><i class="fas fa-search" aria-hidden="true"></i></div>
-                    <h3 class="feature-title">Forensic Analysis</h3>
-                    <p>Identify red flags and unusual patterns in company financial reporting.</p>
-                </div>
+                <div class="feature-card reveal"><div class="feature-icon"><i class="fas fa-chart-line" aria-hidden="true"></i></div><h3 class="feature-title">Comprehensive Metrics</h3><p>Track revenue growth, profitability, cash flow, and key financial ratios over time.</p></div>
+                <div class="feature-card reveal"><div class="feature-icon"><i class="fas fa-table" aria-hidden="true"></i></div><h3 class="feature-title">Detailed Statements</h3><p>View complete income statements, balance sheets, and cash flow statements.</p></div>
+                <div class="feature-card reveal"><div class="feature-icon"><i class="fas fa-search" aria-hidden="true"></i></div><h3 class="feature-title">Forensic Analysis</h3><p>Identify red flags and unusual patterns in company financial reporting.</p></div>
             </section>
-            <section class="about-section reveal">
+            <section id="about-us" class="about-section reveal">
                 <h2>About Us</h2>
                 <ul>
                     <li>Our Vision: To become the most trusted provider of forensic financial analytics.</li>
