@@ -4,19 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ForensicFinancials | Professional Financial Analysis</title>
+
+    <!-- Fonts & Icons -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap">
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Global JS (fade‑in, scroll‑reveal, dynamic footer year) -->
+    <script src="script.js" defer></script>
 </head>
 <body>
 <div class="app-container">
+    <!-- BODY fades in via CSS+JS (page‑load) -->
+
     <header>
         <nav class="navbar">
-            <!-- logo & nav links now point to index.html for “Home” -->
             <a href="index.html" class="nav-logo">Forensic<span>Financials</span></a>
             <div class="nav-links">
-                <a href="index.html" class="nav-link">Home</a>
-                <!-- Analyzer lives at analyzer.html -->
+                <a href="index.html"  class="nav-link">Home</a>
                 <a href="analyzer.html" class="nav-link">Analyzer</a>
                 <a href="#" class="nav-link">About</a>
                 <a href="#" class="nav-link">Contact</a>
@@ -25,13 +32,13 @@
     </header>
 
     <main class="main-content">
-        <section class="hero-section">
+        <!-- Reveal‑on‑scroll animation targets -->
+        <section class="hero-section reveal">
             <h1 class="hero-title">Professional Financial Analysis <span>Made Simple</span></h1>
             <p class="hero-subtitle">
                 Unlock deep insights into company financials with our powerful forensic analysis tools.
                 Make informed investment decisions with clear, actionable data.
             </p>
-            <!-- CTA button now goes to analyzer.html -->
             <a href="analyzer.html" class="cta-button">
                 Start Analyzing
                 <i class="fas fa-arrow-right"></i>
@@ -39,24 +46,18 @@
         </section>
 
         <section class="features-section">
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="fas fa-chart-line"></i>
-                </div>
+            <div class="feature-card reveal">
+                <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
                 <h3 class="feature-title">Comprehensive Metrics</h3>
                 <p>Track revenue growth, profitability, cash flow, and key financial ratios over time.</p>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="fas fa-table"></i>
-                </div>
+            <div class="feature-card reveal">
+                <div class="feature-icon"><i class="fas fa-table"></i></div>
                 <h3 class="feature-title">Detailed Statements</h3>
                 <p>View complete income statements, balance sheets, and cash flow statements.</p>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="fas fa-search"></i>
-                </div>
+            <div class="feature-card reveal">
+                <div class="feature-icon"><i class="fas fa-search"></i></div>
                 <h3 class="feature-title">Forensic Analysis</h3>
                 <p>Identify red flags and unusual patterns in company financial reporting.</p>
             </div>
@@ -67,9 +68,5 @@
         <p>© <span id="currentYear"></span> ForensicFinancials. All rights reserved.</p>
     </footer>
 </div>
-
-<script>
-    document.getElementById('currentYear').textContent = new Date().getFullYear();
-</script>
 </body>
 </html>
