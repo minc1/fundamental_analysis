@@ -3,108 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ForensicFinancials | Financial Analysis</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap">
+    <title>ForensicFinancials | Professional Financial Analysis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js" defer></script>
 </head>
 <body>
     <div class="app-container">
-        <header class="app-header">
-            <h1>Forensic<span>Financials</span></h1>
-            <p class="subtitle">In-depth Financial Statement Analysis</p>
+        <header>
+            <nav class="navbar">
+                <a href="index.html" class="nav-logo">Forensic<span>Financials</span></a>
+                <button id="menuToggle" class="menu-toggle" aria-label="Toggle navigation">☰</button>
+                <div class="nav-links">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="analyzer.html" class="nav-link">Analyzer</a>
+                    <a href="#" class="nav-link">About</a>
+                    <a href="#" class="nav-link">Contact</a>
+                </div>
+            </nav>
         </header>
-
         <main class="main-content">
-            <section class="input-section card">
-                <div class="input-group">
-                    <div class="input-container">
-                        <label for="ticker">Enter Company Ticker</label>
-                        <div class="input-with-button">
-                            <input type="text" id="ticker" placeholder="e.g. NVDA, AAPL" autofocus>
-                            <button id="loadData" class="primary-button">
-                                <span class="button-text">Analyze</span>
-                                <span class="button-icon">→</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="error" id="errorMessage"></div>
-                </div>
+            <section class="hero-section reveal">
+                <h1 class="hero-title">Professional Financial Analysis <span>Made Simple</span></h1>
+                <p class="hero-subtitle">
+                    Unlock deep insights into company financials with our powerful forensic analysis tools.
+                    Make informed investment decisions with clear, actionable data.
+                </p>
+                <a href="analyzer.html" class="cta-button">
+                    Start Analyzing
+                    <i class="fas fa-arrow-right"></i>
+                </a>
             </section>
-
-            <div class="loading" id="loadingIndicator">
-                <div class="spinner"></div>
-                <p>Loading financial data for <span id="loadingTicker"></span>...</p>
-            </div>
-
-            <section class="results-section" id="dataContainer" style="display: none;">
-                <div class="company-header card">
-                    <h2 id="companyHeader"></h2>
-                    <div class="company-metrics">
-                        <div class="metric-card">
-                            <span class="metric-label">Revenue (<span class="metric-year"></span>)</span>
-                            <span class="metric-value" id="revenue">-</span>
-                        </div>
-                        <div class="metric-card">
-                            <span class="metric-label">Net Income (<span class="metric-year"></span>)</span>
-                            <span class="metric-value" id="netIncome">-</span>
-                        </div>
-                        <div class="metric-card">
-                            <span class="metric-label">Debt/Equity (<span class="metric-year"></span>)</span>
-                            <span class="metric-value" id="debtEquity">-</span>
-                        </div>
-                        <div class="metric-card">
-                            <span class="metric-label">Free Cash Flow (<span class="metric-year"></span>)</span>
-                            <span class="metric-value" id="freeCashFlow">-</span>
-                        </div>
-                        <div class="metric-card">
-                            <span class="metric-label">Diluted EPS (<span class="metric-year"></span>)</span>
-                            <span class="metric-value" id="eps">-</span>
-                        </div>
-                    </div>
+            <section class="features-section">
+                <div class="feature-card reveal">
+                    <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+                    <h3 class="feature-title">Comprehensive Metrics</h3>
+                    <p>Track revenue growth, profitability, cash flow, and key financial ratios over time.</p>
                 </div>
-
-                <div class="chart-container card">
-                    <div class="chart-header">
-                        <h3>Revenue Trend</h3>
-                    </div>
-                    <div class="chart-wrapper">
-                        <canvas id="revenueChart"></canvas>
-                    </div>
+                <div class="feature-card reveal">
+                    <div class="feature-icon"><i class="fas fa-table"></i></div>
+                    <h3 class="feature-title">Detailed Statements</h3>
+                    <p>View complete income statements, balance sheets, and cash flow statements.</p>
                 </div>
-
-                <div class="chart-container card">
-                    <div class="chart-header">
-                        <h3>Profitability & Cash Flow</h3>
-                        <div class="chart-legend" id="chartLegend"></div>
-                    </div>
-                    <div class="chart-wrapper">
-                        <canvas id="metricsChart"></canvas>
-                    </div>
-                </div>
-
-                <div class="financial-tables">
-                    <div class="table-section card">
-                        <h3>Income Statement</h3>
-                        <div class="table-container" id="incomeTable"></div>
-                    </div>
-
-                    <div class="table-section card">
-                        <h3>Balance Sheet</h3>
-                        <div class="table-container" id="balanceSheetTable"></div>
-                    </div>
-
-                    <div class="table-section card">
-                        <h3>Cash Flow Statement</h3>
-                        <div class="table-container" id="cashFlowTable"></div>
-                    </div>
+                <div class="feature-card reveal">
+                    <div class="feature-icon"><i class="fas fa-search"></i></div>
+                    <h3 class="feature-title">Forensic Analysis</h3>
+                    <p>Identify red flags and unusual patterns in company financial reporting.</p>
                 </div>
             </section>
         </main>
-
         <footer class="app-footer">
-            <p>Data provided by company filings. © <span id="currentYear"></span> ForensicFinancials</p>
+            <p>© <span id="currentYear"></span> ForensicFinancials. All rights reserved.</p>
         </footer>
     </div>
 </body>
