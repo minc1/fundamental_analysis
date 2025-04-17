@@ -16,8 +16,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const menuToggle = $('menuToggle');
     const navLinks = document.querySelector('.nav-links');
     if (menuToggle && navLinks) {
+        menuToggle.setAttribute('aria-expanded', 'false');
         menuToggle.addEventListener('click', () => {
             navLinks.classList.toggle('open');
+            menuToggle.setAttribute('aria-expanded', navLinks.classList.contains('open'));
         });
     }
     const tickerInput = $('ticker');
