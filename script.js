@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                 },
-                elements: { line: { tension: 0.4 } }
+                elements: { line: { tension: 0.42 } }
             };
         }
     }
