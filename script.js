@@ -13,6 +13,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }, { threshold: 0.12 });
     $$('.reveal').forEach(el => revealObserver.observe(el));
+    const menuToggle = $('menuToggle');
+    const navLinks = document.querySelector('.nav-links');
+    if (menuToggle && navLinks) {
+        menuToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('open');
+        });
+    }
     const tickerInput = $('ticker');
     if (!tickerInput) return;
     const metricsCfg = [
