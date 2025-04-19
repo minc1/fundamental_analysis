@@ -1,7 +1,5 @@
 # ForensicFinancials: Powerful Financial Fundamentals Analyzer
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/4c2e2b6f-8b1d-4e8d-8c6e-1234567890ab/deploy-status)](https://forensicfinancials-tools.netlify.app/)
-
 **Live Demo:** [https://forensicfinancials-tools.netlify.app/](https://forensicfinancials-tools.netlify.app/)
 
 ForensicFinancials is a modern web-based tool for deep, visual analysis of company fundamentals. Instantly analyze and compare key financial metrics, spot trends, and uncover red flags—all in a clean, interactive dashboard.
