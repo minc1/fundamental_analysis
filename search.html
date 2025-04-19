@@ -11,6 +11,83 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <style>
+        .search-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(28, 37, 65, 0.08);
+            padding: 2.5rem;
+            max-width: 500px;
+            margin: 2rem auto;
+            border: 1px solid rgba(28, 37, 65, 0.1);
+            text-align: center;
+        }
+        .search-card h2 {
+            color: #1c2541;
+            margin-bottom: 1.5rem;
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+        .input-container {
+            margin-bottom: 1.5rem;
+        }
+        .input-container label {
+            display: block;
+            margin-bottom: 0.75rem;
+            font-weight: 500;
+            color: #1c2541;
+            text-align: center;
+        }
+        .input-with-button {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .input-with-button input {
+            flex: 1;
+            padding: 0.875rem 1.25rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+        .input-with-button input:focus {
+            border-color: #c5a47e;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(197, 164, 126, 0.2);
+            background: white;
+        }
+        .primary-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0 1.75rem;
+            border: none;
+            border-radius: 8px;
+            background: #1c2541;
+            color: white;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .primary-button:hover {
+            background: #2a3a5f;
+            transform: translateY(-1px);
+        }
+        .button-icon {
+            color: #c5a47e;
+            font-weight: bold;
+        }
+        .error {
+            color: #d9534f;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            text-align: center;
+            display: none;
+        }
+    </style>
     <script src="script.js" defer></script>
 </head>
 <body>
@@ -28,21 +105,20 @@
             </nav>
         </header>
         <main class="main-content">
-            <section class="input-section card" style="max-width: 600px; margin: 2rem auto;">
-                <div class="input-group">
-                    <div class="input-container">
-                        <label for="searchTicker">Enter Company Ticker</label>
-                        <div class="input-with-button">
-                            <input type="text" id="searchTicker" placeholder="e.g. NVDA, AAPL" autofocus>
-                            <button id="searchButton" class="primary-button" type="button">
-                                <span class="button-text">Analyze</span>
-                                <span class="button-icon">→</span>
-                            </button>
-                        </div>
+            <div class="search-card">
+                <h2>Search Company Ticker</h2>
+                <div class="input-container">
+                    <label for="searchTicker">Enter stock symbol to analyze</label>
+                    <div class="input-with-button">
+                        <input type="text" id="searchTicker" placeholder="e.g. NVDA, AAPL, MSFT" autofocus>
+                        <button id="searchButton" class="primary-button" type="button">
+                            <span class="button-text">Analyze</span>
+                            <span class="button-icon">→</span>
+                        </button>
                     </div>
-                    <div class="error" id="errorMessage"></div>
                 </div>
-            </section>
+                <div class="error" id="errorMessage"></div>
+            </div>
         </main>
         <footer class="app-footer">
             <p>© <span id="currentYear"></span> ForensicFinancials. All rights reserved.</p>
@@ -61,6 +137,7 @@
                     errorElm.style.display = 'block';
                     return;
                 }
+                errorElm.style.display = 'none';
                 window.location.href = `analyzer.html?ticker=${encodeURIComponent(ticker)}`;
             });
             
@@ -70,7 +147,6 @@
                 }
             });
             
-            // Initialize current year
             document.getElementById('currentYear').textContent = new Date().getFullYear();
         });
     </script>
