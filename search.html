@@ -34,7 +34,7 @@
                         <label for="searchTicker">Enter Company Ticker</label>
                         <div class="input-with-button">
                             <input type="text" id="searchTicker" placeholder="e.g. NVDA, AAPL" autofocus>
-                            <button id="searchButton" class="primary-button" type="submit">
+                            <button id="searchButton" class="primary-button" type="button">
                                 <span class="button-text">Analyze</span>
                                 <span class="button-icon">→</span>
                             </button>
@@ -48,5 +48,31 @@
             <p>© <span id="currentYear"></span> ForensicFinancials. All rights reserved.</p>
         </footer>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchButton = document.getElementById('searchButton');
+            const tickerInput = document.getElementById('searchTicker');
+            const errorElm = document.getElementById('errorMessage');
+            
+            searchButton.addEventListener('click', function() {
+                const ticker = tickerInput.value.trim().toUpperCase();
+                if (!ticker) {
+                    errorElm.textContent = 'Please enter a valid ticker symbol';
+                    errorElm.style.display = 'block';
+                    return;
+                }
+                window.location.href = `analyzer.html?ticker=${encodeURIComponent(ticker)}`;
+            });
+            
+            tickerInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchButton.click();
+                }
+            });
+            
+            // Initialize current year
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+        });
+    </script>
 </body>
 </html>
