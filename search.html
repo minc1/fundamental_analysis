@@ -28,20 +28,21 @@
             </nav>
         </header>
         <main class="main-content">
-            <div class="search-wrapper reveal">
-                <div class="search-card">
-                    <h2 class="text-center">Search Ticker</h2>
-                    <form id="searchForm">
+            <section class="input-section card" style="max-width: 600px; margin: 2rem auto;">
+                <div class="input-group">
+                    <div class="input-container">
+                        <label for="searchTicker">Enter Company Ticker</label>
                         <div class="input-with-button">
-                            <label for="searchTicker" class="visually-hidden">Enter Company Ticker</label>
-                            <input type="text" id="searchTicker" placeholder="e.g. AAPL, NVDA" aria-label="Enter ticker" autofocus>
+                            <input type="text" id="searchTicker" placeholder="e.g. NVDA, AAPL" autofocus>
                             <button id="searchButton" class="primary-button" type="submit">
                                 <span class="button-text">Analyze</span>
+                                <span class="button-icon">→</span>
                             </button>
                         </div>
-                    </form>
+                    </div>
+                    <div class="error" id="errorMessage"></div>
                 </div>
-            </div>
+            </section>
         </main>
         <footer class="app-footer">
             <p>© <span id="currentYear"></span> ForensicFinancials. All rights reserved.</p>
