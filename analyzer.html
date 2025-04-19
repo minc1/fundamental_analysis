@@ -4,22 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ForensicFinancials | Financial Analysis</title>
+    <meta name="description" content="Analyze company financials in-depth with interactive charts and tables.">
+    <meta property="og:title" content="ForensicFinancials | Financial Analysis">
+    <meta property="og:description" content="Analyze company financials in-depth with interactive charts and tables.">
+    <meta property="og:image" content="https://yourdomain.com/og-analyzer.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="script.js" defer></script>
+    <!-- Smooth fade-in for analyzer page -->
+    <style>
+        body { opacity: 0; transition: opacity 0.2s ease-in; }
+        body.page-loaded { opacity: 1; }
+    </style>
+    <script>
+        window.addEventListener('load', () => document.body.classList.add('page-loaded'));
+    </script>
 </head>
 <body>
     <div class="app-container">
         <header>
             <nav class="navbar">
                 <a href="index.html" class="nav-logo">Forensic<span>Financials</span></a>
-                <button id="menuToggle" class="menu-toggle" aria-label="Toggle navigation">☰</button>
+                <button id="menuToggle" class="menu-toggle" aria-label="Toggle navigation" aria-expanded="false">☰</button>
                 <div class="nav-links">
                     <a href="index.html" class="nav-link">Home</a>
-                    <a href="analyzer.html" class="nav-link">Analyzer</a>
-                    <a href="#" class="nav-link">About</a>
+                    <a href="search.html" class="nav-link">Search</a>
+                    <a href="index.html#about-us" class="nav-link">About Us</a>
                     <a href="#" class="nav-link">Contact</a>
                 </div>
             </nav>

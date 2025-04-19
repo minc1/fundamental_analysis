@@ -1,4 +1,3 @@
-window.addEventListener('load', () => document.body.classList.add('page-loaded'));
 document.addEventListener('DOMContentLoaded', () => {
     const $ = id => document.getElementById(id);
     const $$ = sel => document.querySelectorAll(sel);
@@ -16,9 +15,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const menuToggle = $('menuToggle');
     const navLinks = document.querySelector('.nav-links');
     if (menuToggle && navLinks) {
+        menuToggle.setAttribute('aria-expanded', 'false');
         menuToggle.addEventListener('click', () => {
             navLinks.classList.toggle('open');
+            menuToggle.setAttribute('aria-expanded', navLinks.classList.contains('open'));
         });
+        const links = navLinks.querySelectorAll('.nav-link');
+        links.forEach(link => link.addEventListener('click', () => {
+            navLinks.classList.remove('open');
+            menuToggle.setAttribute('aria-expanded', 'false');
+        }));
     }
     const tickerInput = $('ticker');
     if (!tickerInput) return;
@@ -90,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                 },
-                elements: { line: { tension: 0.4 } }
+                elements: { line: { tension: 0.41 } }
             };
         }
     }
@@ -216,3 +222,29 @@ document.addEventListener('DOMContentLoaded', () => {
         errorElm.style.display = 'block';
     }
 });
+
+function setupSearchPage() {
+    const form = document.getElementById('searchForm');
+    if (!form) return;
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+        const ticker = document.getElementById('searchTicker').value.trim().toUpperCase();
+        if (!ticker) return;
+        window.location.href = `analyzer.html?ticker=${encodeURIComponent(ticker)}`;
+    });
+}
+document.addEventListener('DOMContentLoaded', setupSearchPage);
+
+(function() {
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get('ticker');
+    if (t) {
+        const input = document.getElementById('ticker');
+        if (input) {
+            input.value = t;
+            window.addEventListener('load', () => {
+                document.getElementById('loadData')?.click();
+            });
+        }
+    }
+})();
