@@ -102,17 +102,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const chartMgr = new ChartManager();
     const charts = {};
+    function hexToRGBA(hex, alpha) {
+        let c = hex.replace('#', '');
+        if (c.length === 3) c = c.split('').map(h => h + h).join('');
+        const r = parseInt(c.substr(0, 2), 16);
+        const g = parseInt(c.substr(2, 2), 16);
+        const b = parseInt(c.substr(4, 2), 16);
+        return `rgba(${r},${g},${b},${alpha})`;
+    }
     function createLineChart({ canvasId, labels, datasets }) {
         charts[canvasId]?.destroy();
-        const styled = datasets.map((ds, i) => ({
-            ...ds,
-            borderColor: chartMgr.palette[i] || chartMgr.palette[0],
-            backgroundColor: chartMgr.palette[i] || chartMgr.palette[0],
-            borderWidth: i === 0 ? 3 : 2,
-            yAxisID: 'y',
-            pointRadius: 3,
-            pointHoverRadius: 5
-        }));
+        const styled = datasets.map((ds, i) => {
+            const baseColor = chartMgr.palette[i] || chartMgr.palette[0];
+            const shouldFill = i === 0; // shade under first dataset (revenue/net income)
+            return {
+                ...ds,
+                borderColor: baseColor,
+                backgroundColor: shouldFill ? hexToRGBA(baseColor, 0.2) : baseColor,
+                pointBackgroundColor: baseColor,
+                borderWidth: i === 0 ? 3 : 2,
+                yAxisID: 'y',
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                fill: shouldFill
+            };
+        });
         let maxAbs = 0, minVal = Infinity;
         styled.forEach(d => d.data.forEach(v => {
             const a = Math.abs(v);
