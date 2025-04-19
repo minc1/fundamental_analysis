@@ -102,6 +102,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const chartMgr = new ChartManager();
     const charts = {};
+    // Plugin: ensure 'Net Income' points draw above other datasets
+    const netIncomePointPlugin = {
+        id: 'netIncomePointPlugin',
+        afterDatasetsDraw(chart) {
+            // find Net Income series and redraw its line and points on top
+            const idx = chart.data.datasets.findIndex(ds => ds.label === 'Net Income');
+            if (idx < 0) return;
+            const meta = chart.getDatasetMeta(idx);
+            // redraw line path above others
+            meta.dataset.draw(chart.ctx);
+            // redraw points above all
+            meta.data.forEach(point => point.draw(chart.ctx));
+        }
+    };
+    Chart.register(netIncomePointPlugin);
     function hexToRGBA(hex, alpha) {
         let c = hex.replace('#', '');
         if (c.length === 3) c = c.split('').map(h => h + h).join('');
@@ -122,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 pointBackgroundColor: baseColor,
                 borderWidth: i === 0 ? 3 : 2,
                 yAxisID: 'y',
-                pointRadius: 3,
+                pointRadius: 2,
                 pointHoverRadius: 5,
                 // Use origin-based fill: above zero with baseColor alpha, below zero with red alpha
                 fill: { target: 'origin', above: hexToRGBA(baseColor, alpha), below: hexToRGBA('#d9534f', alpha) },
@@ -138,7 +153,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // If no metrics below zero, start y-axis at 0, else provide slight negative padding
         const yMin = minVal >= 0 ? 0 : Math.min(minVal, -maxAbs * 0.05);
         const ctx = $(canvasId).getContext('2d');
-        charts[canvasId] = new Chart(ctx, { type: 'line', data: { labels, datasets: styled }, options: chartMgr.baseOptions(yMin) });
+        const chart = new Chart(ctx, { type: 'line', data: { labels, datasets: styled }, options: chartMgr.baseOptions(yMin) });
+        // Redraw primary (navy) dataset points on top of all lines
+        chart.getDatasetMeta(0).data.forEach(point => point.draw(chart.ctx));
+        charts[canvasId] = chart;
         const header = ctx.canvas.closest('.chart-container').querySelector('.chart-header');
         const legend = header.querySelector('.chart-legend') || header.appendChild(document.createElement('div'));
         legend.className = 'chart-legend';
