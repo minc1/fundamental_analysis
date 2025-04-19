@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                 },
-                elements: { line: { tension: 0.41 } }
+                elements: { line: { tension: 0.35 } }
             };
         }
     }
@@ -112,19 +112,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function createLineChart({ canvasId, labels, datasets }) {
         charts[canvasId]?.destroy();
+        // Style datasets: primary (navy) most prominent with highest order and stronger fill
         const styled = datasets.map((ds, i) => {
             const baseColor = chartMgr.palette[i] || chartMgr.palette[0];
-            const shouldFill = i === 0; // shade under first dataset (revenue/net income)
+            const alpha = i === 0 ? 0.25 : 0.07;
             return {
                 ...ds,
                 borderColor: baseColor,
-                backgroundColor: shouldFill ? hexToRGBA(baseColor, 0.2) : baseColor,
                 pointBackgroundColor: baseColor,
                 borderWidth: i === 0 ? 3 : 2,
                 yAxisID: 'y',
                 pointRadius: 3,
                 pointHoverRadius: 5,
-                fill: shouldFill
+                // Use origin-based fill: above zero with baseColor alpha, below zero with red alpha
+                fill: { target: 'origin', above: hexToRGBA(baseColor, alpha), below: hexToRGBA('#d9534f', alpha) },
+                order: datasets.length - i
             };
         });
         let maxAbs = 0, minVal = Infinity;
@@ -133,12 +135,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (a > maxAbs) maxAbs = a;
             if (v < minVal) minVal = v;
         }));
+        // If no metrics below zero, start y-axis at 0, else provide slight negative padding
+        const yMin = minVal >= 0 ? 0 : Math.min(minVal, -maxAbs * 0.05);
         const ctx = $(canvasId).getContext('2d');
-        charts[canvasId] = new Chart(ctx, { type: 'line', data: { labels, datasets: styled }, options: chartMgr.baseOptions(Math.min(minVal, -maxAbs * 0.05)) });
+        charts[canvasId] = new Chart(ctx, { type: 'line', data: { labels, datasets: styled }, options: chartMgr.baseOptions(yMin) });
         const header = ctx.canvas.closest('.chart-container').querySelector('.chart-header');
         const legend = header.querySelector('.chart-legend') || header.appendChild(document.createElement('div'));
         legend.className = 'chart-legend';
-        legend.innerHTML = styled.map((ds, i) => `<div class="chart-legend-item" data-index="${i}"><span class="chart-legend-color" style="background:${ds.borderColor}"></span>${ds.label}</div>`).join('');
+        // Order legend items by dataset.order descending so primary (navy) is on the left
+        const legendItems = styled.map((ds, i) => ({ ds, idx: i })).sort((a, b) => b.ds.order - a.ds.order);
+        legend.innerHTML = legendItems.map(item => `<div class="chart-legend-item" data-index="${item.idx}"><span class="chart-legend-color" style="background:${item.ds.borderColor}"></span>${item.ds.label}</div>`).join('');
         legend.onclick = e => {
             const item = e.target.closest('.chart-legend-item');
             if (!item) return;
