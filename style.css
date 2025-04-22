@@ -467,14 +467,9 @@ table.financial-table {
     background: #263247;
 }
 @media (max-width: 768px) {
-    .app-container {
-        padding: 1.5rem 1rem;
-    }
-    
     .menu-toggle {
         display: flex;
     }
-    
     .nav-links {
         position: absolute;
         top: 100%;
@@ -486,87 +481,45 @@ table.financial-table {
         max-height: 0;
         overflow: hidden;
         transition: max-height 0.3s ease;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        border-bottom: 1px solid var(--light-gray);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-    
     .nav-links.open {
-        max-height: 280px;
+        max-height: 240px;
     }
-    
     .nav-link {
         width: 100%;
-        padding: 0.75rem 1.25rem;
-        min-height: 44px;
-        font-size: 0.9rem;
+        padding: 0 1rem;
+        min-height: 48px;
     }
-    
     .nav-links .nav-link + .nav-link {
-        border-top: 1px solid var(--light-gray);
+        border-top: 1px solid #e6e6e6;
     }
-    
-    .main-content {
-        margin-top: 4.5rem;
-    }
-    
-    .hero-section {
-        padding: 2.5rem 1rem;
-        margin: 1.5rem 0;
-    }
-    
     .hero-title {
-        font-size: 1.75rem;
+        font-size: 2rem;
     }
-    
-    .hero-subtitle {
-        font-size: 1rem;
-    }
-    
     .input-with-button {
         flex-direction: column;
     }
-    
     .primary-button {
         justify-content: center;
-        padding: 0.75rem;
-        width: 100%;
+        padding: .75rem;
     }
-    
     .company-metrics {
         flex-direction: column;
-        align-items: stretch;
+        align-items: center;
         gap: 1rem;
     }
-    
     .metric-card {
         width: 100%;
-        padding: 1rem;
     }
-    
     .chart-wrapper {
-        height: 220px;
+        height: 260px;
     }
-    
     .chart-legend {
-        justify-content: flex-start;
-        gap: 0.75rem;
+        justify-content: center;
     }
-    
     .features-section {
         grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
-    
-    .feature-card {
-        padding: 1.5rem;
-    }
-    
-    .card {
-        padding: 1.5rem;
-    }
-    
-    .table-container {
-        border: none;
     }
 }
 @media print {
