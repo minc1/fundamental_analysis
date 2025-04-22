@@ -131,6 +131,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const styled = datasets.map((ds, i) => {
             const baseColor = chartMgr.palette[i] || chartMgr.palette[0];
             const alpha = i === 0 ? 0.25 : 0.07;
+            
+            // Create gradient for all datasets
+            let fill = {
+                target: 'origin',
+                above: (ctx) => {
+                    const chart = ctx.chart;
+                    const {ctx: context, chartArea} = chart;
+                    if (!chartArea) return null;
+                    
+                    const gradient = context.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                    gradient.addColorStop(0, hexToRGBA(baseColor, 0));
+                    gradient.addColorStop(0.5, hexToRGBA(baseColor, 0.15));
+                    gradient.addColorStop(1, hexToRGBA(baseColor, 0.3));
+                    return gradient;
+                },
+                below: (ctx) => {
+                    const chart = ctx.chart;
+                    const {ctx: context, chartArea} = chart;
+                    if (!chartArea) return null;
+                    
+                    const gradient = context.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                    gradient.addColorStop(0, hexToRGBA('#d9534f', 0));
+                    gradient.addColorStop(0.5, hexToRGBA('#d9534f', 0.15));
+                    gradient.addColorStop(1, hexToRGBA('#d9534f', 0.3));
+                    return gradient;
+                }
+            };
+            
             return {
                 ...ds,
                 borderColor: baseColor,
@@ -139,8 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 yAxisID: 'y',
                 pointRadius: 2,
                 pointHoverRadius: 5,
-                // Use origin-based fill: above zero with baseColor alpha, below zero with red alpha
-                fill: { target: 'origin', above: hexToRGBA(baseColor, alpha), below: hexToRGBA('#d9534f', alpha) },
+                fill,
                 order: datasets.length - i
             };
         });
@@ -239,8 +266,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function buildCharts(inc, cf) {
         const years = inc.map(i => i.calendarYear);
-        createLineChart({ canvasId: 'revenueChart', labels: years, datasets: [{ label: 'Revenue', data: inc.map(i => i.revenue) }] });
-        createLineChart({ canvasId: 'metricsChart', labels: years, datasets: [{ label: 'Net Income', data: inc.map(i => i.netIncome) }, { label: 'Operating Cash Flow', data: cf.map(i => i.operatingCashFlow) }, { label: 'Free Cash Flow', data: cf.map(i => i.freeCashFlow) }] });
+        createLineChart({ 
+            canvasId: 'revenueChart', 
+            labels: years, 
+            datasets: [{ label: 'Revenue', data: inc.map(i => i.revenue) }] 
+        });
+        createLineChart({ 
+            canvasId: 'metricsChart', 
+            labels: years, 
+            datasets: [
+                { label: 'Net Income', data: inc.map(i => i.netIncome) },
+                { label: 'Operating Cash Flow', data: cf.map(i => i.operatingCashFlow) },
+                { label: 'Free Cash Flow', data: cf.map(i => i.freeCashFlow) }
+            ] 
+        });
     }
     function tableHTML(headers, rows) {
         const thead = headers.map(h => `<th>${h}</th>`).join('');
