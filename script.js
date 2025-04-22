@@ -262,6 +262,15 @@ document.addEventListener('DOMContentLoaded', () => {
         metricEls.eps.textContent = fmt2(latest.epsdiluted || latest.eps);
         buildCharts(inc, cf);
         buildTables(inc, cf, bs);
+        // Set SEC filing link from latest income statement
+        const secLinkEl = $('secLink');
+        if (latest.finalLink) {
+            secLinkEl.href = latest.finalLink;
+            secLinkEl.textContent = `View ${latest.calendarYear || 'Latest'} SEC Filing`;
+        } else {
+            secLinkEl.href = '#';
+            secLinkEl.textContent = 'SEC Filing Unavailable';
+        }
         dataSection.style.display = 'block';
     }
     function buildCharts(inc, cf) {
