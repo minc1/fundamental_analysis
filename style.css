@@ -392,6 +392,23 @@ table.financial-table {
     color: var(--gray-color);
     font-size: .9rem;
 }
+.sec-footer {
+    text-align: center;
+    margin-top: 2rem;
+}
+.sec-button {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: var(--navy);
+    color: #fff;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+}
+.sec-button:hover {
+    background: var(--accent);
+}
 @media (max-width: 768px) {
     .menu-toggle {
         display: flex;
