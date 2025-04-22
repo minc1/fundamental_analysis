@@ -302,6 +302,50 @@ document.addEventListener('DOMContentLoaded', () => {
         incomeTableElm.innerHTML = tableHTML(['Year','Revenue','Gross Profit','Net Income','Diluted EPS','Operating Income'], rev.map(r => [r.calendarYear, fmtCell(r.revenue,'revenue'), currency(r.grossProfit), fmtCell(r.netIncome,'netIncome'), fmt2(r.epsdiluted||r.eps), currency(r.operatingIncome)]));
         balanceTableElm.innerHTML = tableHTML(['Year','Total Assets','Total Debt','Total Equity','Cash','Current Assets'], rb.map(r => [r.calendarYear, currency(r.totalAssets), fmtCell(r.totalDebt,'totalDebt'), fmtCell(r.totalEquity,'totalEquity'), currency(r.cashAndCashEquivalents), currency(r.totalCurrentAssets)]));
         cashTableElm.innerHTML = tableHTML(['Year','Operating CF','Investing CF','Financing CF','Free CF','Net Change'], rc.map(r => [r.calendarYear, fmtCell(r.operatingCashFlow,'operatingCF'), currency(r.netCashUsedForInvestingActivites), currency(r.netCashUsedProvidedByFinancingActivities), fmtCell(r.freeCashFlow,'freeCF'), currency(r.netChangeInCash)]));
+        
+        // Build Key Investor Metrics table
+        const keyMetricsTable = $('keyMetricsTable');
+        if (keyMetricsTable) {
+            keyMetricsTable.innerHTML = tableHTML(
+                ['Year', 'Current Ratio', 'Interest Coverage', 'Return on Equity', 'Profit Margin', 'FCF/Revenue'],
+                rb.map((r, i) => {
+                    const incomeData = rev[i] || {};
+                    const cashData = rc[i] || {};
+                    
+                    // Calculate metrics
+                    // Current Ratio = Current Assets / Current Liabilities
+                    const currentRatio = r.totalCurrentAssets && r.totalCurrentLiabilities ? 
+                        r.totalCurrentAssets / r.totalCurrentLiabilities : null;
+                    
+                    // Interest Coverage = Operating Income / Interest Expense (or EBIT / Interest)
+                    // Using operatingIncome for EBIT if interestExpense exists, otherwise null
+                    const interestCoverage = incomeData.operatingIncome && incomeData.interestExpense && 
+                                           incomeData.interestExpense !== 0 ? 
+                        incomeData.operatingIncome / Math.abs(incomeData.interestExpense) : null;
+                    
+                    // Return on Equity = Net Income / Shareholders' Equity
+                    const returnOnEquity = incomeData.netIncome && r.totalStockholdersEquity ? 
+                        incomeData.netIncome / r.totalStockholdersEquity : null;
+                    
+                    // Net Profit Margin = Net Income / Revenue
+                    const profitMargin = incomeData.netIncome && incomeData.revenue ? 
+                        incomeData.netIncome / incomeData.revenue : null;
+                    
+                    // FCF to Revenue = Free Cash Flow / Revenue
+                    const fcfRevenue = cashData.freeCashFlow && incomeData.revenue ? 
+                        cashData.freeCashFlow / incomeData.revenue : null;
+                    
+                    return [
+                        r.calendarYear,
+                        currentRatio ? fmt2(currentRatio) : 'N/A',
+                        interestCoverage ? fmt2(interestCoverage) + 'x' : 'N/A',
+                        returnOnEquity ? fmt2(returnOnEquity * 100) + '%' : 'N/A',
+                        profitMargin ? fmt2(profitMargin * 100) + '%' : 'N/A',
+                        fcfRevenue ? fmt2(fcfRevenue * 100) + '%' : 'N/A'
+                    ];
+                })
+            );
+        }
     }
     function showError(msg) {
         errorElm.textContent = msg;
