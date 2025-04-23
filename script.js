@@ -152,9 +152,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!chartArea) return null;
                     
                     const gradient = context.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-                    gradient.addColorStop(0, hexToRGBA('#d9534f', 0));
-                    gradient.addColorStop(0.5, hexToRGBA('#d9534f', 0.15));
-                    gradient.addColorStop(1, hexToRGBA('#d9534f', 0.3));
+                    gradient.addColorStop(0, hexToRGBA('#c9302c', 0));
+                    gradient.addColorStop(0.5, hexToRGBA('#c9302c', 0.15));
+                    gradient.addColorStop(1, hexToRGBA('#c9302c', 0.3));
                     return gradient;
                 }
             };
