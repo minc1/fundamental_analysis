@@ -1,6 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
     const $ = id => document.getElementById(id);
     const $$ = sel => document.querySelectorAll(sel);
+    
+    // Setup export button event listeners
+    function setupExportButtons() {
+        $$('.export-btn').forEach(btn => {
+            btn.addEventListener('click', () => exportData(btn.dataset.export));
+        });
+    }
     const yearEl = $('currentYear');
     if (yearEl) yearEl.textContent = new Date().getFullYear();
     const revealObserver = new IntersectionObserver((entries, ob) => {
@@ -152,9 +159,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!chartArea) return null;
                     
                     const gradient = context.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-                    gradient.addColorStop(0, hexToRGBA('#c9302c', 0));
-                    gradient.addColorStop(0.5, hexToRGBA('#c9302c', 0.15));
-                    gradient.addColorStop(1, hexToRGBA('#c9302c', 0.3));
+                    gradient.addColorStop(0, hexToRGBA('#d9534f', 0));
+                    gradient.addColorStop(0.5, hexToRGBA('#d9534f', 0.15));
+                    gradient.addColorStop(1, hexToRGBA('#d9534f', 0.3));
                     return gradient;
                 }
             };
@@ -248,7 +255,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return res.json();
     }
     function displayData(ticker, inc, cf, bs) {
-        const sortByYear = (a, b) => a.calendarYear - b.calendarYear;
+        // Store data globally for export functionality
+        window.financialData = {
+            ticker,
+            income: inc,
+            cashflow: cf,
+            balance: bs
+        };
+        
+        const sortByYear = (a, b) => b.calendarYear - a.calendarYear;
         [inc, cf, bs].forEach(arr => arr.sort(sortByYear));
         $('companyHeader').textContent = `${ticker} Financial Analysis`;
         const latest = inc.at(-1) || {};
@@ -296,9 +311,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return `<table class="financial-table"><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>`;
     }
     function buildTables(inc, cf, bs) {
-        const rev = [...inc].reverse();
-        const rb = [...bs].reverse();
-        const rc = [...cf].reverse();
+        // Sort by year (most recent first)
+        const rev = [...inc].sort((a, b) => b.calendarYear - a.calendarYear);
+        const rc = [...cf].sort((a, b) => b.calendarYear - a.calendarYear);
+        const rb = [...bs].sort((a, b) => b.calendarYear - a.calendarYear);
+        
+        // Store sorted data for export
+        window.financialData.sortedIncome = rev;
+        window.financialData.sortedCashflow = rc;
+        window.financialData.sortedBalance = rb;
         incomeTableElm.innerHTML = tableHTML(['Year','Revenue','Gross Profit','Net Income','Diluted EPS','Operating Income'], rev.map(r => [r.calendarYear, fmtCell(r.revenue,'revenue'), currency(r.grossProfit), fmtCell(r.netIncome,'netIncome'), fmt2(r.epsdiluted||r.eps), currency(r.operatingIncome)]));
         balanceTableElm.innerHTML = tableHTML(['Year','Total Assets','Total Debt','Total Equity','Cash','Current Assets'], rb.map(r => [r.calendarYear, currency(r.totalAssets), fmtCell(r.totalDebt,'totalDebt'), fmtCell(r.totalEquity,'totalEquity'), currency(r.cashAndCashEquivalents), currency(r.totalCurrentAssets)]));
         cashTableElm.innerHTML = tableHTML(['Year','Operating CF','Investing CF','Financing CF','Free CF','Net Change'], rc.map(r => [r.calendarYear, fmtCell(r.operatingCashFlow,'operatingCF'), currency(r.netCashUsedForInvestingActivites), currency(r.netCashUsedProvidedByFinancingActivities), fmtCell(r.freeCashFlow,'freeCF'), currency(r.netChangeInCash)]));
@@ -351,6 +372,131 @@ document.addEventListener('DOMContentLoaded', () => {
         errorElm.textContent = msg;
         errorElm.style.display = 'block';
     }
+    
+    // CSV Export functionality
+    function exportData(type) {
+        if (!window.financialData) return;
+        
+        const ticker = window.financialData.ticker;
+        let data, filename, headers;
+        
+        switch(type) {
+            // Removed chart export cases as requested
+                
+            case 'income':
+                data = window.financialData.sortedIncome;
+                headers = ['Year', 'Revenue', 'Cost of Revenue', 'Gross Profit', 'R&D', 'SG&A', 'Operating Income', 'Interest Expense', 'Income Tax', 'Net Income', 'EPS'];
+                filename = `${ticker}_income_statement.csv`;
+                data = data.map(d => [
+                    d.calendarYear, d.revenue, d.costOfRevenue, d.grossProfit, 
+                    d.researchAndDevelopment, d.sellingGeneralAndAdministrative, 
+                    d.operatingIncome, d.interestExpense, d.incomeTaxExpense, 
+                    d.netIncome, d.eps
+                ]);
+                break;
+                
+            case 'balance':
+                data = window.financialData.sortedBalance;
+                headers = ['Year', 'Cash', 'Short-term Investments', 'Receivables', 'Inventory', 'Total Current Assets', 
+                           'Property & Equipment', 'Intangible Assets', 'Total Assets', 'Accounts Payable', 
+                           'Current Debt', 'Total Current Liabilities', 'Long-term Debt', 'Total Liabilities', 'Total Equity'];
+                filename = `${ticker}_balance_sheet.csv`;
+                data = data.map(d => [
+                    d.calendarYear, d.cashAndCashEquivalents, d.shortTermInvestments, d.netReceivables, 
+                    d.inventory, d.totalCurrentAssets, d.propertyPlantEquipmentNet, d.intangibleAssets, 
+                    d.totalAssets, d.accountsPayable, d.shortTermDebt, d.totalCurrentLiabilities, 
+                    d.longTermDebt, d.totalLiabilities, d.totalStockholdersEquity
+                ]);
+                break;
+                
+            case 'cashflow':
+                data = window.financialData.sortedCashflow;
+                headers = ['Year', 'Operating Cash Flow', 'Investing Cash Flow', 'Financing Cash Flow', 'Free Cash Flow', 'Net Change in Cash'];
+                filename = `${ticker}_cash_flow.csv`;
+                data = data.map(d => [
+                    d.calendarYear, d.operatingCashFlow, d.netCashUsedForInvestingActivites, 
+                    d.netCashUsedProvidedByFinancingActivities, d.freeCashFlow, d.netChangeInCash
+                ]);
+                break;
+                
+            case 'keymetrics':
+                const income = window.financialData.sortedIncome;
+                const balance = window.financialData.sortedBalance;
+                const cashflow = window.financialData.sortedCashflow;
+                
+                headers = ['Year', 'Current Ratio', 'Interest Coverage', 'Return on Equity', 'Profit Margin', 'FCF/Revenue'];
+                filename = `${ticker}_key_metrics.csv`;
+                
+                // Create data array with calculated metrics
+                data = balance.map((r, i) => {
+                    const incomeData = income[i] || {};
+                    const cashData = cashflow[i] || {};
+                    
+                    // Calculate metrics
+                    const currentRatio = r.totalCurrentAssets && r.totalCurrentLiabilities ? 
+                        r.totalCurrentAssets / r.totalCurrentLiabilities : null;
+                    
+                    const interestCoverage = incomeData.operatingIncome && incomeData.interestExpense && 
+                                           incomeData.interestExpense !== 0 ? 
+                        incomeData.operatingIncome / Math.abs(incomeData.interestExpense) : null;
+                    
+                    const returnOnEquity = incomeData.netIncome && r.totalStockholdersEquity ? 
+                        incomeData.netIncome / r.totalStockholdersEquity : null;
+                    
+                    const profitMargin = incomeData.netIncome && incomeData.revenue ? 
+                        incomeData.netIncome / incomeData.revenue : null;
+                    
+                    const fcfRevenue = cashData.freeCashFlow && incomeData.revenue ? 
+                        cashData.freeCashFlow / incomeData.revenue : null;
+                    
+                    return [
+                        r.calendarYear,
+                        currentRatio,
+                        interestCoverage,
+                        returnOnEquity ? returnOnEquity : null,
+                        profitMargin ? profitMargin : null,
+                        fcfRevenue ? fcfRevenue : null
+                    ];
+                });
+                break;
+                
+            default:
+                return;
+        }
+        
+        // Convert to CSV and download
+        downloadCSV(headers, data, filename);
+    }
+    
+    function downloadCSV(headers, data, filename) {
+        // Create CSV content
+        let csvContent = headers.join(',') + '\n';
+        
+        // Add data rows
+        csvContent += data.map(row => 
+            row.map(cell => 
+                cell === null || cell === undefined ? '' : String(cell)
+            ).join(',')
+        ).join('\n');
+        
+        // Create download link
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    
+    // Set up export buttons after data is loaded
+    const originalDisplayData = displayData;
+    displayData = function(...args) {
+        originalDisplayData.apply(this, args);
+        setupExportButtons();
+    };
 });
 
 function setupSearchPage() {
