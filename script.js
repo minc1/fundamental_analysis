@@ -214,11 +214,12 @@ document.addEventListener('DOMContentLoaded', () => {
         operatingCF: v => v >= 0 ? 'highlight-positive' : 'highlight-negative',
         freeCF: v => v >= 0 ? 'highlight-positive' : 'highlight-negative'
     };
-    function fmtCell(raw, key, formatter = currency) {
+    function fmtCell(raw, key, formatter = currency, includeHtml = true) {
         if (raw == null || isNaN(raw)) return 'N/A';
-        const baseCls = raw >= 0 ? 'positive-value' : 'negative-value';
-        const hl = highlightRules[key]?.(raw) || '';
-        return `<span class="${baseCls} ${hl}">${formatter(raw)}</span>`;
+        const val = formatter(raw);
+        const rule = highlightRules[key];
+        const cls = rule ? rule(raw) : '';
+        return includeHtml && cls ? `<span class="value ${cls}">${val}</span>` : val;
     }
     const loadButton = $('loadData');
     const loadingTicker = $('loadingTicker');
@@ -263,10 +264,10 @@ document.addEventListener('DOMContentLoaded', () => {
             balance: bs
         };
         
-        const sortByYear = (a, b) => b.calendarYear - a.calendarYear;
+        const sortByYear = (a, b) => a.calendarYear - b.calendarYear;
         [inc, cf, bs].forEach(arr => arr.sort(sortByYear));
         $('companyHeader').textContent = `${ticker} Financial Analysis`;
-        const latest = inc.at(0) || {};
+        const latest = inc.at(-1) || {};
         const latestCash = cf.at(-1) || {};
         const latestBal = bs.at(-1) || {};
         metricYearEls.forEach(el => el.textContent = latest.calendarYear || 'N/A');
@@ -385,37 +386,43 @@ document.addEventListener('DOMContentLoaded', () => {
                 
             case 'income':
                 data = window.financialData.sortedIncome;
-                headers = ['Year', 'Revenue', 'Cost of Revenue', 'Gross Profit', 'R&D', 'SG&A', 'Operating Income', 'Interest Expense', 'Income Tax', 'Net Income', 'EPS'];
+                headers = ['Year', 'Revenue', 'Gross Profit', 'Net Income', 'Diluted EPS', 'Operating Income']; 
                 filename = `${ticker}_income_statement.csv`;
                 data = data.map(d => [
-                    d.calendarYear, d.revenue, d.costOfRevenue, d.grossProfit, 
-                    d.researchAndDevelopment, d.sellingGeneralAndAdministrative, 
-                    d.operatingIncome, d.interestExpense, d.incomeTaxExpense, 
-                    d.netIncome, d.eps
+                    d.calendarYear, 
+                    fmtCell(d.revenue, 'revenue', currency, false), 
+                    currency(d.grossProfit), 
+                    fmtCell(d.netIncome, 'netIncome', currency, false), 
+                    fmt2(d.epsdiluted || d.eps), 
+                    currency(d.operatingIncome)
                 ]);
                 break;
                 
             case 'balance':
                 data = window.financialData.sortedBalance;
-                headers = ['Year', 'Cash', 'Short-term Investments', 'Receivables', 'Inventory', 'Total Current Assets', 
-                           'Property & Equipment', 'Intangible Assets', 'Total Assets', 'Accounts Payable', 
-                           'Current Debt', 'Total Current Liabilities', 'Long-term Debt', 'Total Liabilities', 'Total Equity'];
+                headers = ['Year', 'Total Assets', 'Total Debt', 'Total Equity', 'Cash', 'Current Assets']; 
                 filename = `${ticker}_balance_sheet.csv`;
                 data = data.map(d => [
-                    d.calendarYear, d.cashAndCashEquivalents, d.shortTermInvestments, d.netReceivables, 
-                    d.inventory, d.totalCurrentAssets, d.propertyPlantEquipmentNet, d.intangibleAssets, 
-                    d.totalAssets, d.accountsPayable, d.shortTermDebt, d.totalCurrentLiabilities, 
-                    d.longTermDebt, d.totalLiabilities, d.totalStockholdersEquity
+                    d.calendarYear, 
+                    currency(d.totalAssets), 
+                    fmtCell(d.totalDebt, 'totalDebt', currency, false), 
+                    fmtCell(d.totalEquity, 'totalEquity', currency, false), 
+                    currency(d.cashAndCashEquivalents), 
+                    currency(d.totalCurrentAssets)
                 ]);
                 break;
                 
             case 'cashflow':
                 data = window.financialData.sortedCashflow;
-                headers = ['Year', 'Operating Cash Flow', 'Investing Cash Flow', 'Financing Cash Flow', 'Free Cash Flow', 'Net Change in Cash'];
+                headers = ['Year', 'Operating CF', 'Investing CF', 'Financing CF', 'Free CF', 'Net Change']; 
                 filename = `${ticker}_cash_flow.csv`;
                 data = data.map(d => [
-                    d.calendarYear, d.operatingCashFlow, d.netCashUsedForInvestingActivites, 
-                    d.netCashUsedProvidedByFinancingActivities, d.freeCashFlow, d.netChangeInCash
+                    d.calendarYear, 
+                    fmtCell(d.operatingCashFlow, 'operatingCF', currency, false), 
+                    currency(d.netCashUsedForInvestingActivites), 
+                    currency(d.netCashUsedProvidedByFinancingActivities), 
+                    fmtCell(d.freeCashFlow, 'freeCF', currency, false), 
+                    currency(d.netChangeInCash)
                 ]);
                 break;
                 
@@ -451,11 +458,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     return [
                         r.calendarYear,
-                        currentRatio,
-                        interestCoverage,
-                        returnOnEquity ? returnOnEquity : null,
-                        profitMargin ? profitMargin : null,
-                        fcfRevenue ? fcfRevenue : null
+                        currentRatio ? fmt2(currentRatio) : 'N/A',
+                        interestCoverage ? fmt2(interestCoverage) + 'x' : 'N/A',
+                        returnOnEquity ? fmt2(returnOnEquity * 100) + '%' : 'N/A',
+                        profitMargin ? fmt2(profitMargin * 100) + '%' : 'N/A',
+                        fcfRevenue ? fmt2(fcfRevenue * 100) + '%' : 'N/A'
                     ];
                 });
                 break;
