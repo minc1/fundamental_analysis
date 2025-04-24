@@ -1,34 +1,18 @@
-html {
-    scroll-behavior: smooth;
-}
-:root {
-    --navy: #1c2541;
-    --gold: #c5a47e;
-    --pastel-gold: #f3e1bb;
-    --light-gold: #fff8e1;
-    --light-color: #f8f9fa;
-    --dark-color: #212529;
-    --gray-color: #6c757d;
-    --border-radius: 8px;
-    --box-shadow: 0 4px 12px rgba(0,0,0,.08);
-    --transition: all .3s ease;
-    --chart-navy: var(--navy);
-    --chart-gold: var(--gold);
-    --chart-gray: var(--gray-color);
-    --chart-pastel-gold: var(--pastel-gold);
-    --accent: var(--gold);
-}
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
+
+/* --- Base & Typography --- */
 body {
     font-family: 'Inter', sans-serif;
     line-height: 1.6;
     color: var(--dark-color);
     background: #f5f7fa;
 }
+
+/* --- Layout --- */
 .app-container {
     max-width: 1200px;
     margin-inline: auto;
@@ -37,140 +21,11 @@ body {
     display: flex;
     flex-direction: column;
 }
-.navbar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    background: rgba(255,255,255,0.9);
-    backdrop-filter: saturate(180%) blur(10px);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem 1rem;
-    z-index: 1000;
-}
-.nav-logo {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--navy);
-    text-decoration: none;
-}
-.nav-logo span {
-    color: var(--accent);
-}
-.menu-toggle {
-    display: none;
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: var(--navy);
-    cursor: pointer;
-    width: 48px;
-    height: 48px;
-    align-items: center;
-    justify-content: center;
-}
-.nav-links {
-    display: flex;
-    gap: 1.5rem;
-}
-.nav-link {
-    color: var(--navy);
-    text-decoration: none;
-    font-weight: 500;
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 1rem;
-    min-height: 48px;
-    min-width: 48px;
-}
-.nav-link:hover {
-    color: var(--accent);
-}
 .main-content {
     flex: 1;
-    margin-top: 4rem;
 }
-.reveal {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
-}
-.reveal.visible {
-    opacity: 1;
-    transform: translateY(0);
-}
-.hero-section {
-    text-align: center;
-    padding: 4rem 1rem;
-    margin: 2rem 0;
-    background: linear-gradient(135deg, var(--navy) 0%, #2a3a5f 100%);
-    color: white;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-}
-.hero-title {
-    font-size: 3rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    line-height: 1.2;
-}
-.hero-title span {
-    color: var(--accent);
-}
-.hero-subtitle {
-    font-size: 1.25rem;
-    max-width: 700px;
-    margin: 0 auto 2rem;
-    opacity: 0.9;
-}
-.cta-button {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 2rem;
-    background: var(--accent);
-    color: var(--navy);
-    font-weight: 600;
-    border-radius: var(--border-radius);
-    text-decoration: none;
-    transition: var(--transition);
-    margin: 0.5rem;
-}
-.cta-button:hover {
-    background: var(--pastel-gold);
-    transform: translateY(-2px);
-}
-.features-section {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-    margin: 3rem 0;
-}
-.feature-card {
-    background: white;
-    padding: 2rem;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
-    text-align: center;
-}
-.feature-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-}
-.feature-icon {
-    font-size: 2.5rem;
-    color: var(--accent);
-    margin-bottom: 1rem;
-}
-.feature-title {
-    color: var(--navy);
-    margin-bottom: 0.5rem;
-}
+
+/* --- Components: Card --- */
 .card {
     background: #fff;
     border-radius: var(--border-radius);
@@ -179,6 +34,8 @@ body {
     margin-bottom: 1.5rem;
     border: 1px solid rgba(0,31,63,.1);
 }
+
+/* --- Components: Input Section --- */
 .input-section {
     max-width: 600px;
     margin: 0 auto 2rem;
@@ -205,6 +62,8 @@ body {
     border-color: var(--accent);
     outline: none;
 }
+
+/* --- Components: Buttons --- */
 .primary-button {
     display: flex;
     align-items: center;
@@ -226,34 +85,8 @@ body {
     font-size: 1.2rem;
     color: var(--accent);
 }
-.error {
-    color: #d9534f;
-    font-size: .9rem;
-    margin-top: .5rem;
-    display: none;
-}
-.loading {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    text-align: center;
-}
-.spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid rgba(0,31,63,.1);
-    border-top-color: var(--navy);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 1rem;
-}
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
+
+/* --- Components: Results Section --- */
 .company-header {
     text-align: center;
     margin-bottom: 2rem;
@@ -290,6 +123,8 @@ body {
     font-weight: 600;
     color: #fff;
 }
+
+/* --- Components: Charts --- */
 .chart-container {
     margin-bottom: 2rem;
 }
@@ -324,6 +159,8 @@ body {
     height: 400px;
     width: 100%;
 }
+
+/* --- Components: Tables --- */
 .financial-tables {
     display: flex;
     flex-direction: column;
@@ -337,6 +174,7 @@ body {
 .table-container {
     overflow: auto;
     max-height: 500px;
+    overflow-x: auto; /* Allow horizontal scrolling */
 }
 table.financial-table {
     width: 100%;
@@ -386,30 +224,8 @@ table.financial-table {
     color: #b83a2d;
     font-weight: 500;
 }
-.app-footer {
-    text-align: center;
-    margin-top: 2rem;
-    color: var(--gray-color);
-    font-size: .9rem;
-}
-.sec-footer {
-    text-align: center;
-    margin-top: 2rem;
-}
-.sec-button {
-    display: inline-block;
-    padding: 0.75rem 1.5rem;
-    background: var(--navy);
-    color: #fff;
-    border-radius: var(--border-radius);
-    text-decoration: none;
-    font-weight: 500;
-    transition: var(--transition);
-}
-.sec-button:hover {
-    background: var(--accent);
-}
 
+/* --- Components: Export Button --- */
 .export-btn {
     background: transparent;
     color: var(--navy);
@@ -430,37 +246,58 @@ table.financial-table {
     color: white;
     transform: translateY(-2px);
 }
+
+/* --- Components: SEC Footer --- */
+.sec-footer {
+    text-align: center;
+    margin-top: 2rem;
+}
+.sec-button {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: var(--navy);
+    color: #fff;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+}
+.sec-button:hover {
+    background: var(--accent);
+}
+
+/* --- Components: Loading & Error --- */
+.error {
+    color: #d9534f;
+    font-size: .9rem;
+    margin-top: .5rem;
+    display: none;
+}
+.loading {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+}
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(0,31,63,.1);
+    border-top-color: var(--navy);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* --- Responsive Design --- */
 @media (max-width: 768px) {
-    .menu-toggle {
-        display: flex;
-    }
-    .nav-links {
-        position: absolute;
-        top: 100%;
-        right: 0;
-        background: #fff;
-        flex-direction: column;
-        align-items: flex-start;
-        width: 100%;
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.3s ease;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    .nav-links.open {
-        max-height: 240px;
-    }
-    .nav-link {
-        width: 100%;
-        padding: 0 1rem;
-        min-height: 48px;
-    }
-    .nav-links .nav-link + .nav-link {
-        border-top: 1px solid #e6e6e6;
-    }
-    .hero-title {
-        font-size: 2rem;
-    }
     .input-with-button {
         flex-direction: column;
     }
@@ -482,12 +319,11 @@ table.financial-table {
     .chart-legend {
         justify-content: center;
     }
-    .features-section {
-        grid-template-columns: 1fr;
-    }
 }
+
+/* --- Print Styles --- */
 @media print {
-    .navbar, .input-section, .app-footer {
+    .input-section, .app-footer {
         display: none;
     }
     .results-section {
@@ -503,6 +339,8 @@ table.financial-table {
         overflow: visible;
     }
 }
+
+/* --- Accessibility - Screen Reader Only --- */
 #about-us {
     scroll-margin-top: 4rem;
 }

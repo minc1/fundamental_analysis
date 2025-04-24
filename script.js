@@ -2,12 +2,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const $ = id => document.getElementById(id);
     const $$ = sel => document.querySelectorAll(sel);
     
+    // --- App State --- 
+    // Encapsulated application state instead of using window.financialData
+    const appState = {
+        ticker: null,
+        income: [],
+        cashflow: [],
+        balance: [],
+        sortedIncome: [],
+        sortedCashflow: [],
+        sortedBalance: [],
+        get latestIncome() { return this.sortedIncome[0] || {}; },
+        get latestCashflow() { return this.sortedCashflow[0] || {}; },
+        get latestBalance() { return this.sortedBalance[0] || {}; },
+    };
+    
     // Setup export button event listeners
     function setupExportButtons() {
         $$('.export-btn').forEach(btn => {
-            btn.addEventListener('click', () => exportData(btn.dataset.export));
+            // Pass appState to exportData (exportData itself will be refactored later)
+            btn.addEventListener('click', () => exportData(btn.dataset.export, appState)); 
         });
     }
+    
     const yearEl = $('currentYear');
     if (yearEl) yearEl.textContent = new Date().getFullYear();
     const revealObserver = new IntersectionObserver((entries, ob) => {
@@ -234,20 +251,16 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadData() {
         const ticker = tickerInput.value.trim().toUpperCase();
         if (!ticker) { showError('Please enter a valid ticker symbol'); return; }
-        loadButton.disabled = tickerInput.disabled = true;
-        loadingTicker.textContent = ticker;
-        loadingElm.style.display = 'flex';
-        errorElm.style.display = 'none';
-        dataSection.style.display = 'none';
+        setState('loading', ticker); // Use new state manager
         try {
             const endpoints = ['income_statement_annual','cash_flow_statement_annual','balance_sheet_statement_annual'];
             const [inc, cf, bs] = await Promise.all(endpoints.map(e => fetchJSON(`DATA/${ticker}/${e}.json`)));
-            displayData(ticker, inc, cf, bs);
+            updateAndDisplayData(ticker, inc, cf, bs); // Call new state update function
+            setState('dataReady'); // Use new state manager
         } catch (err) {
-            showError(`Error loading data for ${ticker}: ${err.message}`);
+            setState('error', `Failed to load data for ${ticker}. Please check the ticker symbol.`); // Use new state manager
         } finally {
-            loadingElm.style.display = 'none';
-            loadButton.disabled = tickerInput.disabled = false;
+            // UI state managed by setState
         }
     }
     async function fetchJSON(url) {
@@ -255,216 +268,237 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!res.ok) throw new Error('Data not found');
         return res.json();
     }
-    function displayData(ticker, inc, cf, bs) {
-        // Store data globally for export functionality
-        window.financialData = {
-            ticker,
-            income: inc,
-            cashflow: cf,
-            balance: bs
-        };
+    
+    // Updates appState and triggers UI updates
+    function updateAndDisplayData(ticker, inc, cf, bs) {
+        // Update raw data in state
+        appState.ticker = ticker;
+        appState.income = inc;
+        appState.cashflow = cf;
+        appState.balance = bs;
         
-        const sortByYear = (a, b) => a.calendarYear - b.calendarYear;
-        [inc, cf, bs].forEach(arr => arr.sort(sortByYear));
+        // --- Single Sort (Descending: most recent year first) ---
+        const sortByYearDesc = (a, b) => b.calendarYear - a.calendarYear;
+        appState.sortedIncome = [...inc].sort(sortByYearDesc);
+        appState.sortedCashflow = [...cf].sort(sortByYearDesc);
+        appState.sortedBalance = [...bs].sort(sortByYearDesc);
+        
         $('companyHeader').textContent = `${ticker} Financial Analysis`;
-        const latest = inc.at(-1) || {};
-        const latestCash = cf.at(-1) || {};
-        const latestBal = bs.at(-1) || {};
-        metricYearEls.forEach(el => el.textContent = latest.calendarYear || 'N/A');
-        metricEls.revenue.textContent = currency(latest.revenue);
-        metricEls.netIncome.textContent = currency(latest.netIncome);
-        metricEls.freeCashFlow.textContent = currency(latestCash.freeCashFlow);
+        
+        // --- Update Metrics from State (using getters for latest based on descending sort) ---
+        const latestIncome = appState.latestIncome;
+        const latestCash = appState.latestCashflow;
+        const latestBal = appState.latestBalance;
+        
+        metricYearEls.forEach(el => el.textContent = latestIncome.calendarYear || 'N/A');
+        metricEls.revenue.textContent = currency(latestIncome.revenue);
+        metricEls.netIncome.textContent = currency(latestIncome.netIncome);
+        metricEls.freeCashFlow.textContent = currency(latestCash.freeCashFlow); // Use latestCashflow getter
         metricEls.debtEquity.textContent = latestBal.totalDebt && latestBal.totalEquity ? fmt2(latestBal.totalDebt / latestBal.totalEquity) : 'N/A';
-        metricEls.eps.textContent = fmt2(latest.epsdiluted || latest.eps);
-        buildCharts(inc, cf);
-        buildTables(inc, cf, bs);
+        metricEls.eps.textContent = fmt2(latestIncome.epsdiluted || latestIncome.eps);
+        
+        // Call builders with sorted data from state
+        buildTables(appState.sortedIncome, appState.sortedCashflow, appState.sortedBalance);
+        buildCharts(appState.sortedIncome, appState.sortedCashflow); // buildCharts will be refactored next
+        
         // Set SEC filing link from latest income statement
         const secLinkEl = $('secLink');
-        if (latest.finalLink) {
-            secLinkEl.href = latest.finalLink;
-            secLinkEl.textContent = `View ${latest.calendarYear || 'Latest'} SEC Filing`;
+        if (latestIncome.finalLink) {
+            secLinkEl.href = latestIncome.finalLink;
+            secLinkEl.textContent = `View ${latestIncome.calendarYear || 'Latest'} SEC Filing`;
         } else {
             secLinkEl.href = '#';
             secLinkEl.textContent = 'SEC Filing Unavailable';
         }
-        dataSection.style.display = 'block';
+        
+        // Setup export buttons now data is ready
+        setupExportButtons(); 
     }
-    function buildCharts(inc, cf) {
-        const years = inc.map(i => i.calendarYear);
+    
+    // Build tables using sorted data (most recent first)
+    function buildTables(sortedIncome, sortedCashflow, sortedBalance) {
+        // --- Data Transformation Functions ---
+        // Returns { headers: [...], rows: [[...], [...]] }
+        function getFormattedIncomeData(sortedInc, includeHtml = true) {
+            const headers = ['Year','Revenue','Gross Profit','Net Income','Diluted EPS','Operating Income'];
+            const rows = sortedInc.map(r => [
+                r.calendarYear, 
+                fmtCell(r.revenue,'revenue', currency, includeHtml), 
+                currency(r.grossProfit), 
+                fmtCell(r.netIncome,'netIncome', currency, includeHtml), 
+                fmt2(r.epsdiluted || r.eps), 
+                currency(r.operatingIncome)
+            ]);
+            return { headers, rows };
+        }
+
+        function getFormattedBalanceData(sortedBalance, includeHtml = true) {
+            const headers = ['Year','Total Assets','Total Debt','Total Equity','Cash','Current Assets'];
+            const rows = sortedBalance.map(r => [
+                r.calendarYear, 
+                currency(r.totalAssets), 
+                fmtCell(r.totalDebt,'totalDebt', currency, includeHtml), 
+                fmtCell(r.totalEquity,'totalEquity', currency, includeHtml), 
+                currency(r.cashAndCashEquivalents), 
+                currency(r.totalCurrentAssets)
+            ]);
+            return { headers, rows };
+        }
+
+        function getFormattedCashflowData(sortedCashflow, includeHtml = true) {
+            const headers = ['Year','Operating CF','Investing CF','Financing CF','Free CF','Net Change'];
+            const rows = sortedCashflow.map(r => [
+                r.calendarYear, 
+                fmtCell(r.operatingCashFlow,'operatingCF', currency, includeHtml), 
+                currency(r.netCashUsedForInvestingActivites), 
+                currency(r.netCashUsedProvidedByFinancingActivities), 
+                fmtCell(r.freeCashFlow,'freeCF', currency, includeHtml), 
+                currency(r.netChangeInCash)
+            ]);
+            return { headers, rows };
+        }
+
+        function getFormattedKeyMetricsData(sortedBalance, sortedIncome, sortedCashflow, includeHtml = true) {
+            const headers = ['Year', 'Current Ratio', 'Interest Coverage', 'Return on Equity', 'Profit Margin', 'FCF/Revenue'];
+            const rows = sortedBalance.map((r, i) => {
+                const incomeData = sortedIncome[i] || {};
+                const cashData = sortedCashflow[i] || {};
+                
+                const currentRatio = r.totalCurrentAssets && r.totalCurrentLiabilities ? 
+                    r.totalCurrentAssets / r.totalCurrentLiabilities : null;
+                const interestCoverage = incomeData.operatingIncome && incomeData.interestExpense && 
+                                       incomeData.interestExpense !== 0 ? 
+                    incomeData.operatingIncome / Math.abs(incomeData.interestExpense) : null;
+                const returnOnEquity = incomeData.netIncome && r.totalStockholdersEquity ? 
+                    incomeData.netIncome / r.totalStockholdersEquity : null;
+                const profitMargin = incomeData.netIncome && incomeData.revenue ? 
+                    incomeData.netIncome / incomeData.revenue : null;
+                const fcfRevenue = cashData.freeCashFlow && incomeData.revenue ? 
+                    cashData.freeCashFlow / incomeData.revenue : null;
+
+                // Apply formatting (HTML not needed here as fmtCell handles it if includeHtml is true)
+                const fmtRatio = v => v ? fmt2(v) : 'N/A';
+                const fmtPercent = v => v ? fmt2(v * 100) + '%' : 'N/A';
+                const fmtCoverage = v => v ? fmt2(v) + 'x' : 'N/A';
+
+                return [
+                    r.calendarYear,
+                    fmtRatio(currentRatio),
+                    fmtCoverage(interestCoverage),
+                    fmtPercent(returnOnEquity),
+                    fmtPercent(profitMargin),
+                    fmtPercent(fcfRevenue)
+                ];
+            });
+            return { headers, rows };
+        }
+
+        // --- Use Transformers to Build Tables ---
+        const incomeData = getFormattedIncomeData(sortedIncome, true);
+        incomeTableElm.innerHTML = tableHTML(incomeData.headers, incomeData.rows);
+
+        const balanceData = getFormattedBalanceData(sortedBalance, true);
+        balanceTableElm.innerHTML = tableHTML(balanceData.headers, balanceData.rows);
+
+        const cashflowData = getFormattedCashflowData(sortedCashflow, true);
+        cashTableElm.innerHTML = tableHTML(cashflowData.headers, cashflowData.rows);
+        
+        const keyMetricsTable = $('keyMetricsTable');
+        if (keyMetricsTable) {
+            const keyMetricsData = getFormattedKeyMetricsData(sortedBalance, sortedIncome, sortedCashflow, true);
+            keyMetricsTable.innerHTML = tableHTML(keyMetricsData.headers, keyMetricsData.rows);
+        }
+    }
+    
+    // Build charts using sorted data (most recent first)
+    function buildCharts(sortedInc, sortedCf) {
+        // Charts expect data oldest to newest, so reverse the sorted (desc) data
+        const reversedInc = [...sortedInc].reverse();
+        const reversedCf = [...sortedCf].reverse();
+        const years = reversedInc.map(i => i.calendarYear); 
+        
         createLineChart({ 
             canvasId: 'revenueChart', 
             labels: years, 
-            datasets: [{ label: 'Revenue', data: inc.map(i => i.revenue) }] 
+            datasets: [{ label: 'Revenue', data: reversedInc.map(i => i.revenue) }] 
         });
         createLineChart({ 
             canvasId: 'metricsChart', 
             labels: years, 
             datasets: [
-                { label: 'Net Income', data: inc.map(i => i.netIncome) },
-                { label: 'Operating Cash Flow', data: cf.map(i => i.operatingCashFlow) },
-                { label: 'Free Cash Flow', data: cf.map(i => i.freeCashFlow) }
+                { label: 'Net Income', data: reversedInc.map(i => i.netIncome) },
+                { label: 'Operating Cash Flow', data: reversedCf.map(i => i.operatingCashFlow) },
+                { label: 'Free Cash Flow', data: reversedCf.map(i => i.freeCashFlow) }
             ] 
         });
     }
+    
     function tableHTML(headers, rows) {
         const thead = headers.map(h => `<th>${h}</th>`).join('');
         const tbody = rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
         return `<table class="financial-table"><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>`;
     }
-    function buildTables(inc, cf, bs) {
-        // Sort by year (most recent first)
-        const rev = [...inc].sort((a, b) => b.calendarYear - a.calendarYear);
-        const rc = [...cf].sort((a, b) => b.calendarYear - a.calendarYear);
-        const rb = [...bs].sort((a, b) => b.calendarYear - a.calendarYear);
-        
-        // Store sorted data for export
-        window.financialData.sortedIncome = rev;
-        window.financialData.sortedCashflow = rc;
-        window.financialData.sortedBalance = rb;
-        incomeTableElm.innerHTML = tableHTML(['Year','Revenue','Gross Profit','Net Income','Diluted EPS','Operating Income'], rev.map(r => [r.calendarYear, fmtCell(r.revenue,'revenue'), currency(r.grossProfit), fmtCell(r.netIncome,'netIncome'), fmt2(r.epsdiluted||r.eps), currency(r.operatingIncome)]));
-        balanceTableElm.innerHTML = tableHTML(['Year','Total Assets','Total Debt','Total Equity','Cash','Current Assets'], rb.map(r => [r.calendarYear, currency(r.totalAssets), fmtCell(r.totalDebt,'totalDebt'), fmtCell(r.totalEquity,'totalEquity'), currency(r.cashAndCashEquivalents), currency(r.totalCurrentAssets)]));
-        cashTableElm.innerHTML = tableHTML(['Year','Operating CF','Investing CF','Financing CF','Free CF','Net Change'], rc.map(r => [r.calendarYear, fmtCell(r.operatingCashFlow,'operatingCF'), currency(r.netCashUsedForInvestingActivites), currency(r.netCashUsedProvidedByFinancingActivities), fmtCell(r.freeCashFlow,'freeCF'), currency(r.netChangeInCash)]));
-        
-        // Build Key Investor Metrics table
-        const keyMetricsTable = $('keyMetricsTable');
-        if (keyMetricsTable) {
-            keyMetricsTable.innerHTML = tableHTML(
-                ['Year', 'Current Ratio', 'Interest Coverage', 'Return on Equity', 'Profit Margin', 'FCF/Revenue'],
-                rb.map((r, i) => {
-                    const incomeData = rev[i] || {};
-                    const cashData = rc[i] || {};
-                    
-                    // Calculate metrics
-                    // Current Ratio = Current Assets / Current Liabilities
-                    const currentRatio = r.totalCurrentAssets && r.totalCurrentLiabilities ? 
-                        r.totalCurrentAssets / r.totalCurrentLiabilities : null;
-                    
-                    // Interest Coverage = Operating Income / Interest Expense (or EBIT / Interest)
-                    // Using operatingIncome for EBIT if interestExpense exists, otherwise null
-                    const interestCoverage = incomeData.operatingIncome && incomeData.interestExpense && 
-                                           incomeData.interestExpense !== 0 ? 
-                        incomeData.operatingIncome / Math.abs(incomeData.interestExpense) : null;
-                    
-                    // Return on Equity = Net Income / Shareholders' Equity
-                    const returnOnEquity = incomeData.netIncome && r.totalStockholdersEquity ? 
-                        incomeData.netIncome / r.totalStockholdersEquity : null;
-                    
-                    // Net Profit Margin = Net Income / Revenue
-                    const profitMargin = incomeData.netIncome && incomeData.revenue ? 
-                        incomeData.netIncome / incomeData.revenue : null;
-                    
-                    // FCF to Revenue = Free Cash Flow / Revenue
-                    const fcfRevenue = cashData.freeCashFlow && incomeData.revenue ? 
-                        cashData.freeCashFlow / incomeData.revenue : null;
-                    
-                    return [
-                        r.calendarYear,
-                        currentRatio ? fmt2(currentRatio) : 'N/A',
-                        interestCoverage ? fmt2(interestCoverage) + 'x' : 'N/A',
-                        returnOnEquity ? fmt2(returnOnEquity * 100) + '%' : 'N/A',
-                        profitMargin ? fmt2(profitMargin * 100) + '%' : 'N/A',
-                        fcfRevenue ? fmt2(fcfRevenue * 100) + '%' : 'N/A'
-                    ];
-                })
-            );
+    
+    // --- UI State Management ---
+    function setState(state, payload = null) {
+        // Reset all potentially active elements
+        loadingElm.style.display = 'none';
+        errorElm.style.display = 'none';
+        dataSection.style.display = 'none';
+        loadButton.disabled = tickerInput.disabled = false; 
+
+        switch(state) {
+            case 'initial':
+                tickerInput.focus();
+                break;
+            case 'loading':
+                loadingTicker.textContent = payload; // ticker symbol
+                loadingElm.style.display = 'block'; 
+                loadButton.disabled = tickerInput.disabled = true;
+                break;
+            case 'dataReady':
+                dataSection.style.display = 'block';
+                break;
+            case 'error':
+                errorElm.textContent = payload; // error message
+                errorElm.style.display = 'block';
+                break;
         }
-    }
-    function showError(msg) {
-        errorElm.textContent = msg;
-        errorElm.style.display = 'block';
     }
     
     // CSV Export functionality
-    function exportData(type) {
-        if (!window.financialData) return;
+    // Accepts state object - Will be refactored next
+    function exportData(type, state) { 
+        if (!state || !state.ticker || !state.sortedIncome.length) {
+            console.warn('Export called with invalid state');
+            return;
+        }
         
-        const ticker = window.financialData.ticker;
-        let data, filename, headers;
+        const ticker = state.ticker;
+        let csvData = { headers: [], rows: [] };
+        let filename;
         
         switch(type) {
             // Removed chart export cases as requested
                 
             case 'income':
-                data = window.financialData.sortedIncome;
-                headers = ['Year', 'Revenue', 'Gross Profit', 'Net Income', 'Diluted EPS', 'Operating Income']; 
+                csvData = getFormattedIncomeData(state.sortedIncome, false); // Request no HTML
                 filename = `${ticker}_income_statement.csv`;
-                data = data.map(d => [
-                    d.calendarYear, 
-                    fmtCell(d.revenue, 'revenue', currency, false), 
-                    currency(d.grossProfit), 
-                    fmtCell(d.netIncome, 'netIncome', currency, false), 
-                    fmt2(d.epsdiluted || d.eps), 
-                    currency(d.operatingIncome)
-                ]);
                 break;
                 
             case 'balance':
-                data = window.financialData.sortedBalance;
-                headers = ['Year', 'Total Assets', 'Total Debt', 'Total Equity', 'Cash', 'Current Assets']; 
+                csvData = getFormattedBalanceData(state.sortedBalance, false); // Request no HTML
                 filename = `${ticker}_balance_sheet.csv`;
-                data = data.map(d => [
-                    d.calendarYear, 
-                    currency(d.totalAssets), 
-                    fmtCell(d.totalDebt, 'totalDebt', currency, false), 
-                    fmtCell(d.totalEquity, 'totalEquity', currency, false), 
-                    currency(d.cashAndCashEquivalents), 
-                    currency(d.totalCurrentAssets)
-                ]);
                 break;
                 
             case 'cashflow':
-                data = window.financialData.sortedCashflow;
-                headers = ['Year', 'Operating CF', 'Investing CF', 'Financing CF', 'Free CF', 'Net Change']; 
+                csvData = getFormattedCashflowData(state.sortedCashflow, false); // Request no HTML
                 filename = `${ticker}_cash_flow.csv`;
-                data = data.map(d => [
-                    d.calendarYear, 
-                    fmtCell(d.operatingCashFlow, 'operatingCF', currency, false), 
-                    currency(d.netCashUsedForInvestingActivites), 
-                    currency(d.netCashUsedProvidedByFinancingActivities), 
-                    fmtCell(d.freeCashFlow, 'freeCF', currency, false), 
-                    currency(d.netChangeInCash)
-                ]);
                 break;
                 
             case 'keymetrics':
-                const income = window.financialData.sortedIncome;
-                const balance = window.financialData.sortedBalance;
-                const cashflow = window.financialData.sortedCashflow;
-                
-                headers = ['Year', 'Current Ratio', 'Interest Coverage', 'Return on Equity', 'Profit Margin', 'FCF/Revenue'];
+                csvData = getFormattedKeyMetricsData(state.sortedBalance, state.sortedIncome, state.sortedCashflow, false); // Request no HTML
                 filename = `${ticker}_key_metrics.csv`;
-                
-                // Create data array with calculated metrics
-                data = balance.map((r, i) => {
-                    const incomeData = income[i] || {};
-                    const cashData = cashflow[i] || {};
-                    
-                    // Calculate metrics
-                    const currentRatio = r.totalCurrentAssets && r.totalCurrentLiabilities ? 
-                        r.totalCurrentAssets / r.totalCurrentLiabilities : null;
-                    
-                    const interestCoverage = incomeData.operatingIncome && incomeData.interestExpense && 
-                                           incomeData.interestExpense !== 0 ? 
-                        incomeData.operatingIncome / Math.abs(incomeData.interestExpense) : null;
-                    
-                    const returnOnEquity = incomeData.netIncome && r.totalStockholdersEquity ? 
-                        incomeData.netIncome / r.totalStockholdersEquity : null;
-                    
-                    const profitMargin = incomeData.netIncome && incomeData.revenue ? 
-                        incomeData.netIncome / incomeData.revenue : null;
-                    
-                    const fcfRevenue = cashData.freeCashFlow && incomeData.revenue ? 
-                        cashData.freeCashFlow / incomeData.revenue : null;
-                    
-                    return [
-                        r.calendarYear,
-                        currentRatio ? fmt2(currentRatio) : 'N/A',
-                        interestCoverage ? fmt2(interestCoverage) + 'x' : 'N/A',
-                        returnOnEquity ? fmt2(returnOnEquity * 100) + '%' : 'N/A',
-                        profitMargin ? fmt2(profitMargin * 100) + '%' : 'N/A',
-                        fcfRevenue ? fmt2(fcfRevenue * 100) + '%' : 'N/A'
-                    ];
-                });
                 break;
                 
             default:
@@ -472,7 +506,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // Convert to CSV and download
-        downloadCSV(headers, data, filename);
+        if (filename && csvData.headers.length > 0) {
+            downloadCSV(csvData.headers, csvData.rows, filename);
+        }
     }
     
     function downloadCSV(headers, data, filename) {
@@ -498,12 +534,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.removeChild(link);
     }
     
-    // Set up export buttons after data is loaded
-    const originalDisplayData = displayData;
-    displayData = function(...args) {
-        originalDisplayData.apply(this, args);
-        setupExportButtons();
-    };
+    // Initial state setup
+    setState('initial');
 });
 
 function setupSearchPage() {
