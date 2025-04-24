@@ -42,11 +42,11 @@ window.addEventListener('load', () => document.body.classList.add('page-loaded')
     </button>
 </div>
     </div>
-    <div class="error" id="errorMessage" role="alert"></div>
+    <div class="error" id="errorMessage"></div>
 </div>
     </section>
 
-<div class="loading" id="loadingIndicator" role="status">
+<div class="loading" id="loadingIndicator">
 <div class="spinner"></div>
 <p>Loading financial data for <span id="loadingTicker"></span>…</p>
     </div>
@@ -73,24 +73,24 @@ window.addEventListener('load', () => document.body.classList.add('page-loaded')
 
 <div class="financial-tables">
 <div class="table-section card">
-<header class="table-header"><h3>Income Statement</h3><button class="export-btn" data-export="income" aria-label="Export Income Statement Data"><i class="fas fa-download"></i></button></header>
+<div class="table-header"><h3>Income Statement</h3><button class="export-btn" data-export="income"><i class="fas fa-download"></i></button></div>
 <div class="table-container" id="incomeTable">
     </div>
     </div>
 <div class="table-section card">
-<header class="table-header"><h3>Balance Sheet</h3><button class="export-btn" data-export="balance" aria-label="Export Balance Sheet Data"><i class="fas fa-download"></i></button></header>
+<div class="table-header"><h3>Balance Sheet</h3><button class="export-btn" data-export="balance"><i class="fas fa-download"></i></button></div>
 <div class="table-container" id="balanceSheetTable">
     </div>
     </div>
 <div class="table-section card">
-<header class="table-header"><h3>Cash Flow Statement</h3><button class="export-btn" data-export="cashflow" aria-label="Export Cash Flow Data"><i class="fas fa-download"></i></button></header>
+<div class="table-header"><h3>Cash Flow Statement</h3><button class="export-btn" data-export="cashflow"><i class="fas fa-download"></i></button></div>
 <div class="table-container" id="cashFlowTable">
     </div>
     </div>
 </div>
 
 <div class="table-section card key-metrics">
-    <header class="table-header"><h3>Key Investor Metrics</h3><button class="export-btn" data-export="keymetrics" aria-label="Export Key Metrics Data"><i class="fas fa-download"></i></button></header>
+    <div class="table-header"><h3>Key Investor Metrics</h3><button class="export-btn" data-export="keymetrics"><i class="fas fa-download"></i></button></div>
     <div class="table-container" id="keyMetricsTable">
     </div>
 </div>
