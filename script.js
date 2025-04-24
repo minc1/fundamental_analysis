@@ -266,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const sortByYear = (a, b) => b.calendarYear - a.calendarYear;
         [inc, cf, bs].forEach(arr => arr.sort(sortByYear));
         $('companyHeader').textContent = `${ticker} Financial Analysis`;
-        const latest = inc.at(-1) || {};
+        const latest = inc.at(0) || {};
         const latestCash = cf.at(-1) || {};
         const latestBal = bs.at(-1) || {};
         metricYearEls.forEach(el => el.textContent = latest.calendarYear || 'N/A');
